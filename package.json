@@ -1,0 +1,58 @@
+{
+  "name": "",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "concurrently --timings -n build: npm:build:*",
+    "build:client": "rimraf build/client && ttsc --project tsconfig.client.json",
+    "build:server": "rimraf build/server && ttsc --project tsconfig.json",
+    "prepare": "husky install; npm run build",
+    "test": "NODE_ENV=\"${NODE_ENV:-test}\" node ./build/server/vendor/tests/testRunner/testRunnerCli.js",
+    "update": "ncu -u",
+    "watch": "concurrently -n watch: npm:watch:*",
+    "watch:build": "concurrently -n watch: npm:watch:build:*",
+    "watch:build:client": "ttsc -w --preserveWatchOutput --project tsconfig.client.json",
+    "watch:build:server": "ttsc -w --preserveWatchOutput --project tsconfig.json"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "tslib": "2.4.0"
+  },
+  "devDependencies": {
+    "@types/minimist": "1.2.2",
+    "@types/node": "18.0.5",
+    "@typescript-eslint/eslint-plugin": "5.30.6",
+    "@typescript-eslint/parser": "5.30.6",
+    "@zerollup/ts-transform-paths": "1.7.18",
+    "@zoltu/typescript-transformer-append-js-extension": "1.0.1",
+    "concurrently": "7.2.2",
+    "eslint": "8.19.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "exit-hook": "3.0.0",
+    "expect": "28.1.3",
+    "husky": "8.0.1",
+    "lint-staged": "13.0.3",
+    "minimist": "1.2.6",
+    "npm-check-updates": "15.3.3",
+    "pkg-up": "4.0.0",
+    "prettier": "2.7.1",
+    "rimraf": "3.0.2",
+    "source-map-support": "0.5.21",
+    "ts-import-transformer": "0.1.7",
+    "ttypescript": "1.5.13",
+    "typectl": "2.28.0",
+    "typescript": "4.7.4",
+    "web-streams-polyfill": "3.2.1"
+  },
+  "lint-staged": {
+    "*.{css,html,json,md}": [
+      "prettier --write"
+    ],
+    "*.{js,jsx,ts}": [
+      "eslint --ignore-path .gitignore --fix"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "baseUrl": "./src",
+    "declaration": true,
+    "esModuleInterop": true,
+    "lib": ["DOM", "ES2021"],
+    "moduleResolution": "node",
+    "paths": { "*": ["*"] },
+    "rootDir": "./src",
+    "sourceMap": true,
+    "types": ["node"],
+    // from gts
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "forceConsistentCasingInFileNames": true,
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "pretty": true,
+    "strict": true
+  }
+}

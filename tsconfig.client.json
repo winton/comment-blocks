@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmitHelpers": true,
+    "module": "ES2020",
+    "outDir": "./build/client",
+    "target": "ES6",
+    "plugins": [
+      {
+        "transform": "ts-import-transformer",
+        "superstruct": "./node_modules/superstruct/lib/index.es.js",
+        "tslib": "./node_modules/tslib/tslib.es6.js"
+      },
+      {
+        "transform": "@zerollup/ts-transform-paths"
+      },
+      {
+        "transform": "@zoltu/typescript-transformer-append-js-extension",
+        "after": true
+      }
+    ]
+  }
+}
