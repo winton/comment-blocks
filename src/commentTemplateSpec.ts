@@ -4,7 +4,7 @@ import describe from "vendor/tests/describe/describe"
 import { readFileSync } from "fs"
 import { join } from "path"
 import projectPath from "vendor/config/projectPath/projectPath"
-import commentTemplateLogToString from "commentTemplateLogToString"
+import logToString from "helpers/logToString/logToString"
 
 describe("commentTemplate", (it) => {
   it("renders fixture", () => {
@@ -40,7 +40,7 @@ describe("commentTemplate", (it) => {
       { log }
     )
 
-    expect(commentTemplateLogToString(log)).toBe(
+    expect(logToString(log)).toBe(
       `
 base comment set   1   <!--- layout --->
 sub comment set    14      <!--- login link | url?: url | test: 1 --->
