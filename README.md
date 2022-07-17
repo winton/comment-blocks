@@ -1,6 +1,6 @@
 # comment-template
 
-🫓 Dynamic templating engine powered by basic HTML + comments
+🚂 Templating engine powered by standard single HTML file + comments
 
 ## Install
 
