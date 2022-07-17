@@ -1,12 +1,12 @@
-# ts-base
+# comment-template
 
-🪨 TypeScript base targeting server and browser
+🫓 Dynamic templating engine powered by basic HTML + comments
 
 ## Install
 
 ```bash
-git clone git@github.com:winton/ts-base.git
-cd ts-base
+git clone git@github.com:winton/comment-template.git
+cd comment-template
 npm install
 ```
 
