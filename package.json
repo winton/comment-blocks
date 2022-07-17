@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "comment-template",
   "version": "0.0.1",
   "description": "",
   "type": "module",
@@ -9,6 +9,7 @@
     "build:client": "rimraf build/client && ttsc --project tsconfig.client.json",
     "build:server": "rimraf build/server && ttsc --project tsconfig.json",
     "prepare": "husky install; npm run build",
+    "start": "npm run watch",
     "test": "NODE_ENV=\"${NODE_ENV:-test}\" node ./build/server/vendor/tests/testRunner/testRunnerCli.js",
     "update": "ncu -u",
     "watch": "concurrently -n watch: npm:watch:*",

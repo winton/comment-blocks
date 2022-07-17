@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-npx ttsc -w --preserveWatchOutput --project tsconfig.json &
-npx ttsc -w --preserveWatchOutput --project tsconfig.client.json
