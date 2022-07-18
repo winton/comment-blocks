@@ -9,10 +9,15 @@ export default (log: CommentTemplateLog) => {
       ({ lineIndex }) => lineIndex.toString().length
     )
   )
+  const maxDepth = Math.max(
+    ...log.map(({ depth }) => depth.toString().length)
+  )
   return log
     .map(
       (v) =>
-        `${v.msg}${" ".repeat(maxMsg + 2 - v.msg.length)}${
+        `${v.depth}${" ".repeat(
+          maxDepth + 2 - v.depth.toString().length
+        )}${v.msg}${" ".repeat(maxMsg + 2 - v.msg.length)}${
           v.lineIndex
         }${" ".repeat(
           maxLineIndex + 2 - v.lineIndex.toString().length

@@ -25,6 +25,7 @@ export interface CommentTemplateParam {
 
 export type CommentTemplateLog = {
   msg: string
+  depth: number
   lineIndex: number
   line: string
 }[]
@@ -33,10 +34,12 @@ export function commentTemplate(
   template: string,
   blocks: CommentTemplateBlock,
   options?: {
+    depth?: number
     params?: Record<string, any>
-    log: CommentTemplateLog
+    log?: CommentTemplateLog
   }
 ): string {
+  const depth = options?.depth || 0
   const lines = squashComments(template).split("\n")
 
   const baseBody: string[] = []
@@ -61,6 +64,15 @@ export function commentTemplate(
       ? lineIndentMatch[0].length
       : 0
 
+    if (newComment) {
+      options?.log?.push({
+        msg: "comment found",
+        depth,
+        lineIndex,
+        line,
+      })
+    }
+
     // add line to body and continue if not a comment
     if (!newComment) {
       if (subComment) {
@@ -75,30 +87,38 @@ export function commentTemplate(
         subBody.length > 2 &&
         lineIndent <= subComment.spaces
       ) {
-        options?.log.push({
+        options?.log?.push({
           msg: "sub comment clear",
+          depth,
           lineIndex,
           line,
         })
 
         const body = subBody.join("\n")
 
-        if (baseBlock?.blocks) {
-          const block = baseBlock.blocks[subComment.id]
+        if (blocks.string) {
+          baseBody.push(blocks.string)
+        } else {
+          const block = baseBlock?.blocks
+            ? baseBlock.blocks[subComment.id]
+            : undefined
+
+          const opts = {
+            ...options,
+            depth: depth + 1,
+          }
 
           if (Array.isArray(block)) {
             for (const b of block) {
-              baseBody.push(
-                commentTemplate(body, b, options)
-              )
+              baseBody.push(commentTemplate(body, b, opts))
             }
           } else if (block) {
             baseBody.push(
-              commentTemplate(body, block, options)
+              commentTemplate(body, block, opts)
             )
+          } else {
+            baseBody.push(commentTemplate(body, {}, opts))
           }
-        } else if (blocks.string) {
-          baseBody.push(blocks.string)
         }
 
         subBody = []
@@ -113,8 +133,9 @@ export function commentTemplate(
       !baseComment ||
       newComment.spaces === baseComment.spaces
     ) {
-      options?.log.push({
+      options?.log?.push({
         msg: "base comment set",
+        depth,
         lineIndex,
         line,
       })
@@ -126,12 +147,6 @@ export function commentTemplate(
           baseComment.id
         ] as CommentTemplateBlock
       }
-
-      baseBody.push(
-        `${" ".repeat(baseComment.spaces)}<!--- ${
-          baseComment.id
-        } --->`
-      )
     }
 
     // set sub comment if not set and base set and indent is higher
@@ -140,19 +155,22 @@ export function commentTemplate(
       baseComment &&
       newComment.spaces > baseComment.spaces
     ) {
-      options?.log.push({
+      options?.log?.push({
         msg: "sub comment set",
+        depth,
         lineIndex,
         line,
       })
 
       subComment = newComment
-      subBody.push(
-        `${" ".repeat(subComment.spaces)}<!--- ${
-          subComment.id
-        } --->`
-      )
     }
+
+    // add comment
+    ;(subComment ? subBody : baseBody).push(
+      `${" ".repeat(newComment.spaces)}<!--- ${
+        newComment.id
+      } --->`
+    )
   }
 
   return baseBody.join("\n")
