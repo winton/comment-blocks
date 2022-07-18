@@ -6,7 +6,7 @@ export type CommentTemplateBlock = {
     string,
     CommentTemplateBlock | CommentTemplateBlock[]
   >
-  params?: Record<string, any>
+  values?: Record<string, any>
   string?: string
 }
 
@@ -36,19 +36,20 @@ export function commentTemplate(
   blocks: CommentTemplateBlock,
   options?: {
     depth?: number
-    params?: Record<string, any>
+    params?: CommentTemplateParam[]
     log?: CommentTemplateLog
+    values?: Record<string, any>
   }
-): string {
+): string | undefined {
   const depth = options?.depth || 0
   const lines = squashComments(template).split("\n")
 
-  const baseBody: string[] = []
+  const baseBody: (string | undefined)[] = []
 
   let baseBlock: CommentTemplateBlock | undefined =
     undefined
 
-  let subBody: string[] = []
+  let subBody: (string | undefined)[] = []
 
   let baseComment: CommentTemplateComment
   let subComment: CommentTemplateComment
@@ -95,7 +96,9 @@ export function commentTemplate(
           line,
         })
 
-        const body = subBody.join("\n")
+        const body = subBody
+          .filter((b) => b !== undefined)
+          .join("\n")
 
         if (blocks.string) {
           baseBody.push(blocks.string)
@@ -107,6 +110,14 @@ export function commentTemplate(
           const opts = {
             ...options,
             depth: depth + 1,
+            params: [
+              ...(options?.params || []),
+              ...(subComment.params || []),
+            ],
+            values: {
+              ...options?.values,
+              ...blocks.values,
+            },
           }
 
           if (Array.isArray(block)) {
@@ -174,13 +185,21 @@ export function commentTemplate(
     )
   }
 
-  const [body, match] = replacePlaceholders(
-    baseBody.join("\n"),
-    baseComment?.params,
-    options?.params
-  )
+  const baseBodyJoin = baseBody
+    .filter((b) => b !== undefined)
+    .join("\n")
 
-  return match ? body : ""
+  if (options?.params) {
+    const [body, match] = replacePlaceholders(
+      baseBodyJoin,
+      options?.params,
+      options?.values
+    )
+
+    return match ? body : undefined
+  } else {
+    return baseBodyJoin
+  }
 }
 
 export function parseComment(line: string) {
@@ -194,6 +213,7 @@ export function parseComment(line: string) {
     const rawParams = match[3]
 
     const params = parseCommentParams(rawParams)
+
     return { id, params, spaces }
   }
 

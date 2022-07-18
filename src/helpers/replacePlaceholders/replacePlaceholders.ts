@@ -12,34 +12,40 @@ export default (
   if (placeholders) {
     for (const param of placeholders) {
       const { key, value } = param
-      const replaceKey = `$!-!-${key}-!-!$`
-      const regex = new RegExp(escapeRegExp(value), "g")
-      newHtml = newHtml.replace(regex, replaceKey)
+
+      if (values && values[key] !== undefined) {
+        const replaceKey = `$!-!-${key}-!-!$`
+        const regex = new RegExp(escapeRegExp(value), "g")
+        newHtml = newHtml.replace(regex, replaceKey)
+      }
     }
 
     for (const param of placeholders) {
       const { key, optional } = param
-      const replaceKey = `$!-!-${key}-!-!$`
-      const regex = new RegExp(
-        escapeRegExp(replaceKey),
-        "g"
-      )
-
-      const oldHtml = newHtml
 
       if (values && values[key] !== undefined) {
-        newHtml = newHtml.replace(
-          regex,
-          values[key].toString()
+        const replaceKey = `$!-!-${key}-!-!$`
+        const regex = new RegExp(
+          escapeRegExp(replaceKey),
+          "g"
         )
-      }
 
-      if (
-        match === true &&
-        !optional &&
-        (oldHtml === newHtml || !values || !values[key])
-      ) {
-        match = false
+        const oldHtml = newHtml
+
+        if (values && values[key] !== undefined) {
+          newHtml = newHtml.replace(
+            regex,
+            values[key].toString()
+          )
+        }
+
+        if (
+          match === true &&
+          !optional &&
+          (oldHtml === newHtml || !values || !values[key])
+        ) {
+          match = false
+        }
       }
     }
   }

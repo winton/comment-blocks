@@ -22,7 +22,7 @@ describe("commentTemplate", (it) => {
             blocks: {
               "login link": [
                 {
-                  params: { url: "" },
+                  values: { url: "https://2.com" },
                   blocks: { "link text": { string: "" } },
                 },
                 { string: "" },
@@ -38,7 +38,7 @@ describe("commentTemplate", (it) => {
             },
           },
         },
-        params: { url: "" },
+        values: { url: "https://1.com" },
       },
       { log }
     )
@@ -47,8 +47,8 @@ describe("commentTemplate", (it) => {
       `
 0  comment found      1   <!--- layout --->
 0  base comment set   1   <!--- layout --->
-0  comment found      14      <!--- login link | url?: url | test: 1 --->
-0  sub comment set    14      <!--- login link | url?: url | test: 1 --->
+0  comment found      14      <!--- login link | url?: url --->
+0  sub comment set    14      <!--- login link | url?: url --->
 0  comment found      17        <!--- link --->
 0  comment found      19          <!--- link text | linkText: this --->
 0  sub comment clear  22      </p>
@@ -118,7 +118,7 @@ describe("commentTemplate", (it) => {
     <p style="font-size: 18px">
       🌎&nbsp;
       <!--- link --->
-      <a href="url">
+      <a href="https://2.com">
         <!--- link text --->
         Click here to access
       </a>
@@ -127,21 +127,12 @@ describe("commentTemplate", (it) => {
     <p style="font-size: 18px">
       🌎&nbsp;
       <!--- link --->
-      <a href="url">
+      <a href="https://1.com">
         <!--- link text --->
         Click here to access
       </a>
     </p>
 
-    <!--- request link --->
-    <p>
-      This link self destructs after one minute.
-      <!--- link --->
-      <a href="url">
-        <!--- link text --->
-        Request a new link.
-      </a>
-    </p>
   </body>
 </html>
       `.trim() + "\n"
