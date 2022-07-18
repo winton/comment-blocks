@@ -31,7 +31,7 @@ export type CommentTemplateLog = {
   line: string
 }[]
 
-export function plainTemplate(
+export function plainHtml(
   template: string,
   blocks: CommentTemplateBlock,
   options?: {
@@ -122,12 +122,12 @@ export function plainTemplate(
 
           if (Array.isArray(block)) {
             for (const b of block) {
-              baseBody.push(plainTemplate(body, b, opts))
+              baseBody.push(plainHtml(body, b, opts))
             }
           } else if (block) {
-            baseBody.push(plainTemplate(body, block, opts))
+            baseBody.push(plainHtml(body, block, opts))
           } else {
-            baseBody.push(plainTemplate(body, {}, opts))
+            baseBody.push(plainHtml(body, {}, opts))
           }
         }
 
@@ -246,4 +246,4 @@ export function parseCommentParam(rawParam: string) {
   return
 }
 
-export default plainTemplate
+export default plainHtml

@@ -1,12 +1,12 @@
-# plain-template
+# plain-html
 
 🚂 Templating engine powered by plain HTML
 
 ## Install
 
 ```bash
-git clone git@github.com:winton/plain-template.git
-cd plain-template
+git clone git@github.com:winton/plain-html.git
+cd plain-html
 npm install
 ```
 

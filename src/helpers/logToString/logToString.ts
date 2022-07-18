@@ -1,4 +1,4 @@
-import { CommentTemplateLog } from "plainTemplate"
+import { CommentTemplateLog } from "plainHtml"
 
 export default (log: CommentTemplateLog) => {
   const maxMsg = Math.max(
