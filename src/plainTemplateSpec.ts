@@ -1,18 +1,18 @@
 import { expect } from "expect"
-import commentTemplate, {
+import plainTemplate, {
   CommentTemplateLog,
-} from "commentTemplate"
+} from "plainTemplate"
 import describe from "vendor/tests/describe/describe"
 import { readFileSync } from "fs"
 import { join } from "path"
 import projectPath from "vendor/config/projectPath/projectPath"
 import logToString from "helpers/logToString/logToString"
 
-describe("commentTemplate", (it) => {
+describe("plainTemplate", (it) => {
   it("renders fixture", () => {
     const log: CommentTemplateLog = []
 
-    const out = commentTemplate(
+    const out = plainTemplate(
       readFileSync(
         join(projectPath, "./fixtures/index.html")
       ).toString(),

@@ -1,4 +1,4 @@
-import { CommentTemplateParam } from "commentTemplate"
+import { CommentTemplateParam } from "plainTemplate"
 import escapeRegExp from "helpers/escapeRegExp/escapeRegExp"
 
 export default (

@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "type": "module",
+  "main": "./build/server/plainTemplate.js",
   "private": true,
   "scripts": {
     "build": "concurrently --timings -n build: npm:build:*",
