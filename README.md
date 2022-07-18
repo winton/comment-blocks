@@ -1,6 +1,6 @@
 # comment-template
 
-🚂 Make standalone HTML dynamic with comments!
+🚂 Templating engine for standalone HTML files
 
 ## Install
 
