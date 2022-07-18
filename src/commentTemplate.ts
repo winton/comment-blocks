@@ -1,3 +1,4 @@
+import replacePlaceholders from "helpers/replacePlaceholders/replacePlaceholders"
 import squashComments from "helpers/squashComments/squashComments"
 
 export type CommentTemplateBlock = {
@@ -173,7 +174,13 @@ export function commentTemplate(
     )
   }
 
-  return baseBody.join("\n")
+  const [body, match] = replacePlaceholders(
+    baseBody.join("\n"),
+    baseComment?.params,
+    options?.params
+  )
+
+  return match ? body : ""
 }
 
 export function parseComment(line: string) {
