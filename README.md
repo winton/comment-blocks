@@ -1,12 +1,12 @@
-# comment-template
+# plain-template
 
 🚂 Templating engine powered by plain HTML
 
 ## Install
 
 ```bash
-git clone git@github.com:winton/comment-template.git
-cd comment-template
+git clone git@github.com:winton/plain-template.git
+cd plain-template
 npm install
 ```
 
