@@ -1,6 +1,6 @@
 # comment-template
 
-🚂 Templating engine for plain HTML files
+🚂 Templating engine powered by plain HTML
 
 ## Install
 
