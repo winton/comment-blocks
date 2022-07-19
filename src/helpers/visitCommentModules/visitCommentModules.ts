@@ -1,13 +1,6 @@
 import lineIndent from "helpers/lineIndent/lineIndent"
 import { parseCommentParams } from "plainHtml"
 
-export type CommentTemplateBlock = {
-  module: string
-  blocks?: CommentTemplateBlock[]
-  values?: Record<string, any>
-  string?: string
-}
-
 export type CommentTemplateComment =
   | {
       module: string
@@ -31,7 +24,6 @@ export function parseComment(line: string) {
     const spaces = match[1].length
     const module = match[2].trim()
     const rawParams = match[3]
-
     const params = parseCommentParams(rawParams)
 
     return { module, params, spaces }
@@ -40,16 +32,32 @@ export function parseComment(line: string) {
   return
 }
 
+export interface VisitCommentOptions {
+  absPath: string[]
+  startPath: string[]
+}
+
+export type VisitCommentLineStates = (
+  | "before comment"
+  | "valid path"
+  | "comment"
+  | "body"
+  | "end"
+  | "inner comment"
+)[]
+
 export function visitCommentModules(
   lines: string[],
   path: string[],
-  fn: (path: string[], body: string) => string,
-  ogPath?: string[]
+  callback: (
+    body: string,
+    options: VisitCommentOptions
+  ) => string,
+  options?: VisitCommentOptions
 ): string | undefined {
-  const result: string[] = []
+  const output: string[] = []
 
-  let comment: CommentTemplateComment
-  let commentIndent: number | undefined
+  let lastComment: CommentTemplateComment
 
   while (lines.length) {
     const line = lines.shift()
@@ -58,53 +66,120 @@ export function visitCommentModules(
       break
     }
 
-    const indent = lineIndent(line)
+    const comment = parseComment(line)
+    const states = lineStates({
+      comment,
+      lastComment,
+      line,
+      path,
+    })
 
-    if (
-      comment &&
-      commentIndent &&
-      indent < commentIndent
-    ) {
+    const invalid =
+      states.includes("before comment") ||
+      !states.includes("valid path")
+
+    if (states.includes("comment") && comment) {
+      lastComment = comment
+    }
+
+    if (states.includes("body") && !invalid) {
+      output.push(line)
+    }
+
+    if (states.includes("end")) {
       lines.unshift(line)
       break
     }
 
-    const newComment = parseComment(line)
-
-    if (!comment && newComment) {
-      if (path[0] && newComment.module !== path[0]) {
-        break
-      }
-
-      comment = newComment
-      commentIndent = lineIndent(line)
-    }
-
-    if (comment && newComment && comment !== newComment) {
+    if (
+      states.includes("inner comment") &&
+      comment &&
+      !invalid
+    ) {
       lines.unshift(line)
 
       const out = visitCommentModules(
         lines,
         path.slice(1),
-        fn,
-        path
+        callback,
+        {
+          absPath: [
+            ...(options?.absPath || [path[0]]),
+            comment.module,
+          ],
+          startPath: options?.startPath || path,
+        }
       )
 
       if (out) {
-        result.push(out)
+        output.push(out)
       }
-    } else if (newComment) {
-      result.push(
-        `${" ".repeat(newComment.spaces)}<!--- ${
-          newComment.module
-        } --->`
-      )
-    } else {
-      result.push(line)
     }
   }
 
-  return result.length
-    ? fn(ogPath || path, result.join("\n"))
+  return output.length
+    ? callback(
+        output.join("\n"),
+        options || {
+          absPath: [path[0]],
+          startPath: path,
+        }
+      )
     : undefined
+}
+
+export function lineStates({
+  comment,
+  lastComment,
+  line,
+  path,
+}: {
+  comment: CommentTemplateComment
+  lastComment: CommentTemplateComment
+  line: string
+  path: string[]
+}) {
+  const states: VisitCommentLineStates = []
+
+  if (!comment && !lastComment) {
+    states.push("before comment")
+  }
+
+  if (
+    !path[0] ||
+    path[0] === (lastComment || comment)?.module
+  ) {
+    states.push("valid path")
+  }
+
+  if (lastComment) {
+    const indent = lineIndent(line)
+
+    if (
+      indent < lastComment.spaces ||
+      (indent === lastComment.spaces &&
+        comment &&
+        comment !== lastComment)
+    ) {
+      states.push("end")
+    }
+
+    if (
+      indent > lastComment.spaces &&
+      comment &&
+      comment !== lastComment
+    ) {
+      states.push("inner comment")
+    }
+  }
+
+  if (!states.includes("inner comment") && comment) {
+    states.push("comment")
+  }
+
+  if (!states.includes("end") && !comment && lastComment) {
+    states.push("body")
+  }
+
+  return states
 }
