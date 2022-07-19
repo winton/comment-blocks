@@ -9,7 +9,6 @@ export interface VisitCommentOptions {
   noInnerContent?: boolean
   params?: CommentParams
   paramsMemo?: CommentParams
-  startPath?: string[]
   stateLog?: string[]
 }
 
@@ -35,11 +34,18 @@ export function visitCommentModules(
     }
 
     const comment = parseComment(line)
+
+    const absPath = [
+      ...(options?.absPath || []),
+      ...(lastComment ? [lastComment.name] : []),
+    ]
+
     const states = lineStates({
       comment,
       lastComment,
       line,
       path,
+      absPath,
     })
 
     if (options?.stateLog) {
@@ -48,15 +54,15 @@ export function visitCommentModules(
       )
     }
 
-    const invalid =
-      states.includes("before comment") ||
-      !states.includes("valid path")
-
     if (states.includes("comment") && comment) {
       lastComment = comment
     }
 
-    if (states.includes("body") && !invalid) {
+    if (
+      states.includes("body") &&
+      !states.includes("before comment") &&
+      states.includes("valid path")
+    ) {
       output.push(line)
     }
 
@@ -65,32 +71,21 @@ export function visitCommentModules(
       break
     }
 
-    if (
-      states.includes("inner comment") &&
-      comment &&
-      !invalid
-    ) {
+    if (states.includes("inner comment") && comment) {
       lines.unshift(line)
 
       const out = visitCommentModules(
         lines,
-        path.slice(1),
+        path,
         callback,
         {
           ...options,
-          absPath: [
-            ...(options?.absPath ||
-              (lastComment?.name
-                ? [lastComment?.name]
-                : [])),
-            comment.name,
-          ],
+          absPath,
           params: comment.params,
           paramsMemo: {
             ...options?.paramsMemo,
             ...comment.params,
           },
-          startPath: options?.startPath || path,
         }
       )
 
@@ -103,12 +98,12 @@ export function visitCommentModules(
 
   return output.length
     ? callback(output.join("\n"), {
-        absPath: lastComment?.name
-          ? [lastComment?.name]
-          : [],
         params: lastComment?.params,
-        startPath: path,
         ...options,
+        absPath: [
+          ...(options?.absPath || []),
+          ...(lastComment ? [lastComment.name] : []),
+        ],
         paramsMemo: {
           ...options?.paramsMemo,
           ...lastComment?.params,

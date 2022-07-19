@@ -1,3 +1,4 @@
+import compareArrays from "helpers/compareArrays/compareArrays"
 import lineIndent from "helpers/lineIndent/lineIndent"
 import { Comment } from "helpers/parseComment/parseComment"
 
@@ -15,11 +16,13 @@ export default ({
   lastComment,
   line,
   path,
+  absPath,
 }: {
   comment: Comment
   lastComment: Comment
   line: string
   path: string[]
+  absPath: string[] | undefined
 }) => {
   const states: LineStates = []
 
@@ -28,8 +31,10 @@ export default ({
   }
 
   if (
-    !path[0] ||
-    path[0] === (lastComment || comment)?.name
+    compareArrays(
+      path,
+      (absPath || []).slice(0, path.length)
+    )
   ) {
     states.push("valid path")
   }

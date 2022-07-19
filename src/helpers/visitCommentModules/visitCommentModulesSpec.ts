@@ -1,19 +1,18 @@
 import { expect } from "expect"
-import describe from "vendor/tests/describe/describe"
 import { readFileSync } from "fs"
 import { join } from "path"
+import describe from "vendor/tests/describe/describe"
 import projectPath from "vendor/config/projectPath/projectPath"
-import { visitCommentModules } from "./visitCommentModules"
 import squashComments from "helpers/squashComments/squashComments"
+import { visitCommentModules } from "./visitCommentModules"
 
 const fixture = readFileSync(
   join(projectPath, "./fixtures/index.html")
 ).toString()
 
-const lines = squashComments(fixture).split("\n")
-
 describe("visitCommentModules", (it) => {
   it("visits fixture", () => {
+    const lines = squashComments(fixture).split("\n")
     const callbacks: any[] = []
     const stateLog: string[] = []
 
@@ -44,19 +43,18 @@ describe("visitCommentModules", (it) => {
       [
         "        Click here to access",
         {
-          absPath: [
-            "layout",
-            "login link",
-            "link",
-            "link text",
-          ],
           params: {
             linkText: {
               optional: false,
               value: "this",
             },
           },
-          startPath: ["layout"],
+          absPath: [
+            "layout",
+            "login link",
+            "link",
+            "link text",
+          ],
           paramsMemo: {
             url: {
               optional: true,
@@ -74,7 +72,6 @@ describe("visitCommentModules", (it) => {
         '      <a href="url">\n        Click here to access\n      </a>',
         {
           absPath: ["layout", "login link", "link"],
-          startPath: ["layout"],
           paramsMemo: {
             url: {
               optional: true,
@@ -87,14 +84,13 @@ describe("visitCommentModules", (it) => {
       [
         '    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>',
         {
-          absPath: ["layout", "login link"],
           params: {
             url: {
               optional: true,
               value: "url",
             },
           },
-          startPath: ["layout"],
+          absPath: ["layout", "login link"],
           paramsMemo: {
             url: {
               optional: true,
@@ -107,19 +103,18 @@ describe("visitCommentModules", (it) => {
       [
         "        Request a new link.",
         {
-          absPath: [
-            "layout",
-            "request link",
-            "link",
-            "link text",
-          ],
           params: {
             linkText: {
               optional: false,
               value: "this",
             },
           },
-          startPath: ["layout"],
+          absPath: [
+            "layout",
+            "request link",
+            "link",
+            "link text",
+          ],
           paramsMemo: {
             url: {
               optional: false,
@@ -137,7 +132,6 @@ describe("visitCommentModules", (it) => {
         '      <a href="url">\n        Request a new link.\n      </a>',
         {
           absPath: ["layout", "request link", "link"],
-          startPath: ["layout"],
           paramsMemo: {
             url: {
               optional: false,
@@ -150,14 +144,13 @@ describe("visitCommentModules", (it) => {
       [
         '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n    </p>',
         {
-          absPath: ["layout", "request link"],
           params: {
             url: {
               optional: false,
               value: "url",
             },
           },
-          startPath: ["layout"],
+          absPath: ["layout", "request link"],
           paramsMemo: {
             url: {
               optional: false,
@@ -171,12 +164,12 @@ describe("visitCommentModules", (it) => {
         '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n    </p>\n  </body>\n</html>\n',
         {
           absPath: ["layout"],
-          startPath: ["layout"],
           paramsMemo: {},
           noInnerContent: false,
         },
       ],
     ])
+
     expect(out).toBe(
       `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -211,7 +204,7 @@ describe("visitCommentModules", (it) => {
 
     expect(log).toBe(
       `
-<!--- layout --->	[ valid path, comment ]
+<!--- layout --->	[ comment ]
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">	[ valid path, body ]
 <html xmlns="http://www.w3.org/1999/xhtml">	[ valid path, body ]
   <head>	[ valid path, body ]
@@ -258,6 +251,170 @@ describe("visitCommentModules", (it) => {
   </body>	[ valid path, body ]
 </html>	[ valid path, body ]
 	[ valid path, body ]
+    `.trim()
+    )
+  })
+
+  it("visits fixture with path", () => {
+    const lines = squashComments(fixture).split("\n")
+    const callbacks: any[] = []
+    const stateLog: string[] = []
+
+    const out = visitCommentModules(
+      lines,
+      ["layout", "login link"],
+      (result, options) => {
+        callbacks.push([
+          result,
+          { ...options, stateLog: undefined },
+        ])
+        return result
+      },
+      { stateLog }
+    )
+
+    const log = stateLog.join("\n")
+
+    // console.log(JSON.stringify(callbacks, null, 2))
+    // console.log(out)
+    // console.log(log)
+
+    // expect(callbacks).toEqual()
+    // expect(out).toBe(``.trim() + "\n")
+    // expect(log).toBe(``.trim())
+
+    expect(callbacks).toEqual([
+      [
+        "        Click here to access",
+        {
+          params: {
+            linkText: {
+              optional: false,
+              value: "this",
+            },
+          },
+          absPath: [
+            "layout",
+            "login link",
+            "link",
+            "link text",
+          ],
+          paramsMemo: {
+            url: {
+              optional: true,
+              value: "url",
+            },
+            linkText: {
+              optional: false,
+              value: "this",
+            },
+          },
+          noInnerContent: true,
+        },
+      ],
+      [
+        '      <a href="url">\n        Click here to access\n      </a>',
+        {
+          absPath: ["layout", "login link", "link"],
+          paramsMemo: {
+            url: {
+              optional: true,
+              value: "url",
+            },
+          },
+          noInnerContent: false,
+        },
+      ],
+      [
+        '    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>',
+        {
+          params: {
+            url: {
+              optional: true,
+              value: "url",
+            },
+          },
+          absPath: ["layout", "login link"],
+          paramsMemo: {
+            url: {
+              optional: true,
+              value: "url",
+            },
+          },
+          noInnerContent: false,
+        },
+      ],
+      [
+        '    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>',
+        {
+          absPath: ["layout"],
+          paramsMemo: {},
+          noInnerContent: false,
+        },
+      ],
+    ])
+
+    expect(out).toBe(
+      "    " +
+        `
+    <p style="font-size: 18px">
+      🌎&nbsp;
+      <a href="url">
+        Click here to access
+      </a>
+    </p>
+    `.trim()
+    )
+
+    expect(log).toBe(
+      `
+<!--- layout --->	[ comment ]
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">	[ body ]
+<html xmlns="http://www.w3.org/1999/xhtml">	[ body ]
+  <head>	[ body ]
+    <meta	[ body ]
+      http-equiv="Content-Type"	[ body ]
+      content="text/html; charset=UTF-8"	[ body ]
+    />	[ body ]
+    <title></title>	[ body ]
+    <style></style>	[ body ]
+  </head>	[ body ]
+	[ body ]
+  <body>	[ body ]
+    <!--- login link | url?: url --->	[ inner comment ]
+    <!--- login link | url?: url --->	[ comment ]
+    <p style="font-size: 18px">	[ valid path, body ]
+      🌎&nbsp;	[ valid path, body ]
+      <!--- link --->	[ valid path, inner comment ]
+      <!--- link --->	[ valid path, comment ]
+      <a href="url">	[ valid path, body ]
+        <!--- link text | linkText: this --->	[ valid path, inner comment ]
+        <!--- link text | linkText: this --->	[ valid path, comment ]
+        Click here to access	[ valid path, body ]
+      </a>	[ valid path, end ]
+      </a>	[ valid path, body ]
+    </p>	[ valid path, end ]
+    </p>	[ valid path, body ]
+	[ valid path, end ]
+	[ body ]
+    <!--- request link | url: url --->	[ inner comment ]
+    <!--- request link | url: url --->	[ comment ]
+    <p>	[ body ]
+      This link self destructs after one minute.	[ body ]
+      <!--- link --->	[ inner comment ]
+      <!--- link --->	[ comment ]
+      <a href="url">	[ body ]
+        <!--- link text | linkText: this --->	[ inner comment ]
+        <!--- link text | linkText: this --->	[ comment ]
+        Request a new link.	[ body ]
+      </a>	[ end ]
+      </a>	[ body ]
+    </p>	[ end ]
+    </p>	[ body ]
+  </body>	[ end ]
+  </body>	[ body ]
+</html>	[ body ]
+	[ body ]
     `.trim()
     )
   })
