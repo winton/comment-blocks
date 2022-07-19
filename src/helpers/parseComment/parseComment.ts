@@ -23,7 +23,7 @@ export default (line: string): Comment => {
     const name = match[2].trim()
     const rawParams = match[3]
 
-    const params = parseCommentParamss(rawParams)
+    const params = parseCommentParams(rawParams)
 
     return { name, params, spaces }
   }
@@ -31,9 +31,9 @@ export default (line: string): Comment => {
   return
 }
 
-export function parseCommentParamss(rawParams: string) {
+export function parseCommentParams(rawParams: string) {
   return rawParams.match(/[^|]+/g)?.reduce((memo, str) => {
-    const params = parseCommentParams(str)
+    const params = parseCommentParam(str)
 
     if (params) {
       const [name, param] = params
@@ -44,7 +44,7 @@ export function parseCommentParamss(rawParams: string) {
   }, {} as CommentParams)
 }
 
-export function parseCommentParams(
+export function parseCommentParam(
   rawParam: string
 ): [string, CommentParam] | undefined {
   const match = rawParam.match(
