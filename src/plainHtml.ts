@@ -51,7 +51,7 @@ export function plainHtml(
 
           const out = replaceParams(html, params, values)
 
-          if (html !== out || !comment.noContent) {
+          if (html !== out || !comment.noInnerContent) {
             memo.push(out)
           }
         }

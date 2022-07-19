@@ -67,7 +67,7 @@ describe("visitCommentModules", (it) => {
               value: "this",
             },
           },
-          noContent: true,
+          noInnerContent: true,
         },
       ],
       [
@@ -81,7 +81,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noContent: false,
+          noInnerContent: false,
         },
       ],
       [
@@ -101,7 +101,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noContent: false,
+          noInnerContent: false,
         },
       ],
       [
@@ -130,7 +130,7 @@ describe("visitCommentModules", (it) => {
               value: "this",
             },
           },
-          noContent: true,
+          noInnerContent: true,
         },
       ],
       [
@@ -144,7 +144,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noContent: false,
+          noInnerContent: false,
         },
       ],
       [
@@ -164,7 +164,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noContent: false,
+          noInnerContent: false,
         },
       ],
       [
@@ -173,7 +173,7 @@ describe("visitCommentModules", (it) => {
           absPath: ["layout"],
           startPath: ["layout"],
           paramsMemo: {},
-          noContent: false,
+          noInnerContent: false,
         },
       ],
     ])

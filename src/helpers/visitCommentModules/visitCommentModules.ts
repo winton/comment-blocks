@@ -6,7 +6,7 @@ import parseComment, {
 
 export interface VisitCommentOptions {
   absPath?: string[]
-  noContent?: boolean
+  noInnerContent?: boolean
   params?: CommentParams
   paramsMemo?: CommentParams
   startPath?: string[]
@@ -24,7 +24,7 @@ export function visitCommentModules(
 ): string | undefined {
   const output: string[] = []
 
-  let noContent = true
+  let noInnerContent = true
   let lastComment: Comment
 
   while (lines.length) {
@@ -95,7 +95,7 @@ export function visitCommentModules(
       )
 
       if (out) {
-        noContent = false
+        noInnerContent = false
         output.push(out)
       }
     }
@@ -113,7 +113,7 @@ export function visitCommentModules(
           ...options?.paramsMemo,
           ...lastComment?.params,
         },
-        noContent,
+        noInnerContent,
       })
     : undefined
 }
