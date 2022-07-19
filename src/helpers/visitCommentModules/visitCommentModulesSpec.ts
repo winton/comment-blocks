@@ -13,7 +13,7 @@ const fixture = readFileSync(
 const lines = squashComments(fixture).split("\n")
 
 describe("visitCommentModules", (it) => {
-  it("renders fixture", () => {
+  it("visits fixture", () => {
     const callbacks: any[] = []
     const stateLog: string[] = []
 
