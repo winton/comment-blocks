@@ -30,6 +30,16 @@ describe("visitCommentModules", (it) => {
       { stateLog }
     )
 
+    const log = stateLog.join("\n")
+
+    // console.log(JSON.stringify(callbacks, null, 2))
+    // console.log(out)
+    // console.log(log)
+
+    // expect(callbacks).toEqual()
+    // expect(out).toBe(``.trim() + "\n")
+    // expect(log).toBe(``.trim())
+
     expect(callbacks).toEqual([
       [
         "        Click here to access",
@@ -40,14 +50,18 @@ describe("visitCommentModules", (it) => {
             "link",
             "link text",
           ],
-          startPath: ["layout"],
           params: {
             linkText: {
               optional: false,
               value: "this",
             },
           },
+          startPath: ["layout"],
           paramsMemo: {
+            url: {
+              optional: true,
+              value: "url",
+            },
             linkText: {
               optional: false,
               value: "this",
@@ -74,13 +88,13 @@ describe("visitCommentModules", (it) => {
         '    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>',
         {
           absPath: ["layout", "login link"],
-          startPath: ["layout"],
           params: {
             url: {
               optional: true,
               value: "url",
             },
           },
+          startPath: ["layout"],
           paramsMemo: {
             url: {
               optional: true,
@@ -99,14 +113,18 @@ describe("visitCommentModules", (it) => {
             "link",
             "link text",
           ],
-          startPath: ["layout"],
           params: {
             linkText: {
               optional: false,
               value: "this",
             },
           },
+          startPath: ["layout"],
           paramsMemo: {
+            url: {
+              optional: false,
+              value: "url",
+            },
             linkText: {
               optional: false,
               value: "this",
@@ -133,13 +151,13 @@ describe("visitCommentModules", (it) => {
         '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n    </p>',
         {
           absPath: ["layout", "request link"],
-          startPath: ["layout"],
           params: {
             url: {
               optional: false,
               value: "url",
             },
           },
+          startPath: ["layout"],
           paramsMemo: {
             url: {
               optional: false,
@@ -154,12 +172,12 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout"],
           startPath: ["layout"],
+          paramsMemo: {},
           noContent: false,
         },
       ],
     ])
-
-    expect(out).toEqual(
+    expect(out).toBe(
       `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -188,10 +206,10 @@ describe("visitCommentModules", (it) => {
     </p>
   </body>
 </html>
-        `.trim() + "\n"
+    `.trim() + "\n"
     )
 
-    expect(stateLog.join("\n")).toBe(
+    expect(log).toBe(
       `
 <!--- layout --->	[ valid path, comment ]
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">	[ valid path, body ]
@@ -240,7 +258,7 @@ describe("visitCommentModules", (it) => {
   </body>	[ valid path, body ]
 </html>	[ valid path, body ]
 	[ valid path, body ]
-        `.trim()
+    `.trim()
     )
   })
 })

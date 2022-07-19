@@ -87,7 +87,7 @@ export function visitCommentModules(
           ],
           params: comment.params,
           paramsMemo: {
-            ...options?.params,
+            ...options?.paramsMemo,
             ...comment.params,
           },
           startPath: options?.startPath || path,
@@ -106,8 +106,13 @@ export function visitCommentModules(
         absPath: lastComment?.name
           ? [lastComment?.name]
           : [],
+        params: lastComment?.params,
         startPath: path,
         ...options,
+        paramsMemo: {
+          ...options?.paramsMemo,
+          ...lastComment?.params,
+        },
         noContent,
       })
     : undefined
