@@ -6,15 +6,16 @@ import projectPath from "vendor/config/projectPath/projectPath"
 import { visitCommentModules } from "./visitCommentModules"
 import squashComments from "helpers/squashComments/squashComments"
 
+const fixture = readFileSync(
+  join(projectPath, "./fixtures/index.html")
+).toString()
+
+const lines = squashComments(fixture).split("\n")
+
 describe("plainHtml", (it) => {
   it("renders fixture", () => {
-    const fixture = readFileSync(
-      join(projectPath, "./fixtures/index.html")
-    ).toString()
-
-    const lines = squashComments(fixture).split("\n")
-
     const callbacks: any[] = []
+    const stateLog: string[] = []
 
     const out = visitCommentModules(
       lines,
@@ -22,7 +23,8 @@ describe("plainHtml", (it) => {
       (result, options) => {
         callbacks.push([result, options])
         return result
-      }
+      },
+      { stateLog }
     )
 
     expect(callbacks).toEqual([
@@ -36,6 +38,7 @@ describe("plainHtml", (it) => {
             "link text",
           ],
           startPath: ["layout"],
+          stateLog: expect.anything(),
         },
       ],
       [
@@ -43,6 +46,7 @@ describe("plainHtml", (it) => {
         {
           absPath: ["layout", "login link", "link"],
           startPath: ["layout"],
+          stateLog: expect.anything(),
         },
       ],
       [
@@ -50,6 +54,7 @@ describe("plainHtml", (it) => {
         {
           absPath: ["layout", "login link"],
           startPath: ["layout"],
+          stateLog: expect.anything(),
         },
       ],
       [
@@ -62,6 +67,7 @@ describe("plainHtml", (it) => {
             "link text",
           ],
           startPath: ["layout"],
+          stateLog: expect.anything(),
         },
       ],
       [
@@ -69,6 +75,7 @@ describe("plainHtml", (it) => {
         {
           absPath: ["layout", "request link", "link"],
           startPath: ["layout"],
+          stateLog: expect.anything(),
         },
       ],
       [
@@ -76,6 +83,7 @@ describe("plainHtml", (it) => {
         {
           absPath: ["layout", "request link"],
           startPath: ["layout"],
+          stateLog: expect.anything(),
         },
       ],
       [
@@ -83,6 +91,7 @@ describe("plainHtml", (it) => {
         {
           absPath: ["layout"],
           startPath: ["layout"],
+          stateLog: expect.anything(),
         },
       ],
     ])
@@ -117,6 +126,58 @@ describe("plainHtml", (it) => {
   </body>
 </html>
     `.trim() + "\n"
+    )
+
+    expect(stateLog.join("\n")).toBe(
+      `
+<!--- layout --->	[ valid path, comment ]
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">	[ valid path, body ]
+<html xmlns="http://www.w3.org/1999/xhtml">	[ valid path, body ]
+  <head>	[ valid path, body ]
+    <meta	[ valid path, body ]
+      http-equiv="Content-Type"	[ valid path, body ]
+      content="text/html; charset=UTF-8"	[ valid path, body ]
+    />	[ valid path, body ]
+    <title></title>	[ valid path, body ]
+    <style></style>	[ valid path, body ]
+  </head>	[ valid path, body ]
+	[ valid path, body ]
+  <body>	[ valid path, body ]
+    <!--- login link | url?: url --->	[ valid path, inner comment ]
+    <!--- login link | url?: url --->	[ valid path, comment ]
+    <p style="font-size: 18px">	[ valid path, body ]
+      🌎&nbsp;	[ valid path, body ]
+      <!--- link --->	[ valid path, inner comment ]
+      <!--- link --->	[ valid path, comment ]
+      <a href="url">	[ valid path, body ]
+        <!--- link text | linkText: this --->	[ valid path, inner comment ]
+        <!--- link text | linkText: this --->	[ valid path, comment ]
+        Click here to access	[ valid path, body ]
+      </a>	[ valid path, end ]
+      </a>	[ valid path, body ]
+    </p>	[ valid path, end ]
+    </p>	[ valid path, body ]
+	[ valid path, end ]
+	[ valid path, body ]
+    <!--- request link | url: url --->	[ valid path, inner comment ]
+    <!--- request link | url: url --->	[ valid path, comment ]
+    <p>	[ valid path, body ]
+      This link self destructs after one minute.	[ valid path, body ]
+      <!--- link --->	[ valid path, inner comment ]
+      <!--- link --->	[ valid path, comment ]
+      <a href="url">	[ valid path, body ]
+        <!--- link text | linkText: this --->	[ valid path, inner comment ]
+        <!--- link text | linkText: this --->	[ valid path, comment ]
+        Request a new link.	[ valid path, body ]
+      </a>	[ valid path, end ]
+      </a>	[ valid path, body ]
+    </p>	[ valid path, end ]
+    </p>	[ valid path, body ]
+  </body>	[ valid path, end ]
+  </body>	[ valid path, body ]
+</html>	[ valid path, body ]
+	[ valid path, body ]
+    `.trim()
     )
   })
 })

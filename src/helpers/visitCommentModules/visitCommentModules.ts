@@ -33,8 +33,9 @@ export function parseComment(line: string) {
 }
 
 export interface VisitCommentOptions {
-  absPath: string[]
-  startPath: string[]
+  absPath?: string[]
+  startPath?: string[]
+  stateLog?: string[]
 }
 
 export type VisitCommentLineStates = (
@@ -74,6 +75,12 @@ export function visitCommentModules(
       path,
     })
 
+    if (options?.stateLog) {
+      options?.stateLog.push(
+        `${line}\t[ ${states.join(", ")} ]`
+      )
+    }
+
     const invalid =
       states.includes("before comment") ||
       !states.includes("valid path")
@@ -103,6 +110,7 @@ export function visitCommentModules(
         path.slice(1),
         callback,
         {
+          ...options,
           absPath: [
             ...(options?.absPath || [path[0]]),
             comment.module,
@@ -118,13 +126,11 @@ export function visitCommentModules(
   }
 
   return output.length
-    ? callback(
-        output.join("\n"),
-        options || {
-          absPath: [path[0]],
-          startPath: path,
-        }
-      )
+    ? callback(output.join("\n"), {
+        absPath: [path[0]],
+        startPath: path,
+        ...options,
+      })
     : undefined
 }
 
