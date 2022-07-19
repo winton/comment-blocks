@@ -76,7 +76,10 @@ export function visitCommentModules(
         {
           ...options,
           absPath: [
-            ...(options?.absPath || [path[0]]),
+            ...(options?.absPath ||
+              (lastComment?.name
+                ? [lastComment?.name]
+                : [])),
             comment.name,
           ],
           params: { ...options?.params, ...comment.params },
@@ -92,7 +95,9 @@ export function visitCommentModules(
 
   return output.length
     ? callback(output.join("\n"), {
-        absPath: [path[0]],
+        absPath: lastComment?.name
+          ? [lastComment?.name]
+          : [],
         startPath: path,
         ...options,
       })
