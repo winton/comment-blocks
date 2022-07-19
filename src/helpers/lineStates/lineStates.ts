@@ -1,0 +1,67 @@
+import lineIndent from "helpers/lineIndent/lineIndent"
+import { Comment } from "helpers/parseComment/parseComment"
+
+export type LineStates = (
+  | "before comment"
+  | "valid path"
+  | "comment"
+  | "body"
+  | "end"
+  | "inner comment"
+)[]
+
+export default ({
+  comment,
+  lastComment,
+  line,
+  path,
+}: {
+  comment: Comment
+  lastComment: Comment
+  line: string
+  path: string[]
+}) => {
+  const states: LineStates = []
+
+  if (!comment && !lastComment) {
+    states.push("before comment")
+  }
+
+  if (
+    !path[0] ||
+    path[0] === (lastComment || comment)?.name
+  ) {
+    states.push("valid path")
+  }
+
+  if (lastComment) {
+    const indent = lineIndent(line)
+
+    if (
+      indent < lastComment.spaces ||
+      (indent === lastComment.spaces &&
+        comment &&
+        comment !== lastComment)
+    ) {
+      states.push("end")
+    }
+
+    if (
+      indent > lastComment.spaces &&
+      comment &&
+      comment !== lastComment
+    ) {
+      states.push("inner comment")
+    }
+  }
+
+  if (!states.includes("inner comment") && comment) {
+    states.push("comment")
+  }
+
+  if (!states.includes("end") && !comment && lastComment) {
+    states.push("body")
+  }
+
+  return states
+}

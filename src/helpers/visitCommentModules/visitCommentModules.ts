@@ -1,51 +1,15 @@
-import lineIndent from "helpers/lineIndent/lineIndent"
-import { parseCommentParams } from "plainHtml"
-
-export type CommentTemplateComment =
-  | {
-      module: string
-      params: CommentTemplateParam[] | undefined
-      spaces: number
-    }
-  | undefined
-
-export interface CommentTemplateParam {
-  key: string
-  value: string
-  optional: boolean
-}
-
-export function parseComment(line: string) {
-  const match = line.match(
-    /(\s*)<!---\s([^\[|]+)(.*)\s--->/
-  )
-
-  if (match) {
-    const spaces = match[1].length
-    const module = match[2].trim()
-    const rawParams = match[3]
-    const params = parseCommentParams(rawParams)
-
-    return { module, params, spaces }
-  }
-
-  return
-}
+import lineStates from "helpers/lineStates/lineStates"
+import parseComment, {
+  Comment,
+  CommentParams,
+} from "helpers/parseComment/parseComment"
 
 export interface VisitCommentOptions {
   absPath?: string[]
+  params?: CommentParams
   startPath?: string[]
   stateLog?: string[]
 }
-
-export type VisitCommentLineStates = (
-  | "before comment"
-  | "valid path"
-  | "comment"
-  | "body"
-  | "end"
-  | "inner comment"
-)[]
 
 export function visitCommentModules(
   lines: string[],
@@ -53,12 +17,12 @@ export function visitCommentModules(
   callback: (
     body: string,
     options: VisitCommentOptions
-  ) => string,
+  ) => string | undefined,
   options?: VisitCommentOptions
 ): string | undefined {
   const output: string[] = []
 
-  let lastComment: CommentTemplateComment
+  let lastComment: Comment
 
   while (lines.length) {
     const line = lines.shift()
@@ -113,8 +77,9 @@ export function visitCommentModules(
           ...options,
           absPath: [
             ...(options?.absPath || [path[0]]),
-            comment.module,
+            comment.name,
           ],
+          params: { ...options?.params, ...comment.params },
           startPath: options?.startPath || path,
         }
       )
@@ -132,60 +97,4 @@ export function visitCommentModules(
         ...options,
       })
     : undefined
-}
-
-export function lineStates({
-  comment,
-  lastComment,
-  line,
-  path,
-}: {
-  comment: CommentTemplateComment
-  lastComment: CommentTemplateComment
-  line: string
-  path: string[]
-}) {
-  const states: VisitCommentLineStates = []
-
-  if (!comment && !lastComment) {
-    states.push("before comment")
-  }
-
-  if (
-    !path[0] ||
-    path[0] === (lastComment || comment)?.module
-  ) {
-    states.push("valid path")
-  }
-
-  if (lastComment) {
-    const indent = lineIndent(line)
-
-    if (
-      indent < lastComment.spaces ||
-      (indent === lastComment.spaces &&
-        comment &&
-        comment !== lastComment)
-    ) {
-      states.push("end")
-    }
-
-    if (
-      indent > lastComment.spaces &&
-      comment &&
-      comment !== lastComment
-    ) {
-      states.push("inner comment")
-    }
-  }
-
-  if (!states.includes("inner comment") && comment) {
-    states.push("comment")
-  }
-
-  if (!states.includes("end") && !comment && lastComment) {
-    states.push("body")
-  }
-
-  return states
 }

@@ -6,13 +6,13 @@ export default (html: string): string => {
       if (body && body[1]) {
         const [title, ...attrs] = body[1].trim().split(/\n/)
 
-        const placeholders = attrs
+        const params = attrs
           .map((attr) => attr.trim())
           .filter(
             (a) => a.includes(":") && !a.includes("|")
           )
 
-        return `<!--- ${title.trim()} | ${placeholders.join(
+        return `<!--- ${title.trim()} | ${params.join(
           " | "
         )} --->`
       }
