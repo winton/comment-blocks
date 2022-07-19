@@ -5,8 +5,7 @@ export default (
   html: string,
   params: CommentParams | undefined,
   values?: Record<string, any>
-): string | undefined => {
-  let match = true
+): string => {
   let newHtml = html
 
   if (params) {
@@ -21,8 +20,6 @@ export default (
     }
 
     for (const name in params) {
-      const { optional } = params[name]
-
       if (values && values[name] !== undefined) {
         const replaceKey = `$!-!-${name}-!-!$`
         const regex = new RegExp(
@@ -30,25 +27,15 @@ export default (
           "g"
         )
 
-        const oldHtml = newHtml
-
         if (values && values[name] !== undefined) {
           newHtml = newHtml.replace(
             regex,
             values[name].toString()
           )
         }
-
-        if (
-          match === true &&
-          !optional &&
-          (oldHtml === newHtml || !values || !values[name])
-        ) {
-          match = false
-        }
       }
     }
   }
 
-  return match ? newHtml : undefined
+  return newHtml
 }

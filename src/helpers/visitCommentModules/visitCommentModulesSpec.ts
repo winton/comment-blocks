@@ -34,97 +34,119 @@ describe("visitCommentModules", (it) => {
       [
         "        Click here to access",
         {
-          startPath: ["layout"],
           absPath: [
             "layout",
             "login link",
             "link",
             "link text",
           ],
+          startPath: ["layout"],
           params: {
-            url: {
-              optional: true,
-              value: "url",
-            },
             linkText: {
               optional: false,
               value: "this",
             },
           },
+          paramsMemo: {
+            linkText: {
+              optional: false,
+              value: "this",
+            },
+          },
+          noContent: true,
         },
       ],
       [
         '      <a href="url">\n        Click here to access\n      </a>',
         {
-          startPath: ["layout"],
           absPath: ["layout", "login link", "link"],
-          params: {
+          startPath: ["layout"],
+          paramsMemo: {
             url: {
               optional: true,
               value: "url",
             },
           },
+          noContent: false,
         },
       ],
       [
         '    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>',
         {
-          startPath: ["layout"],
           absPath: ["layout", "login link"],
+          startPath: ["layout"],
           params: {
             url: {
               optional: true,
               value: "url",
             },
           },
+          paramsMemo: {
+            url: {
+              optional: true,
+              value: "url",
+            },
+          },
+          noContent: false,
         },
       ],
       [
         "        Request a new link.",
         {
-          startPath: ["layout"],
           absPath: [
             "layout",
             "request link",
             "link",
             "link text",
           ],
+          startPath: ["layout"],
           params: {
-            url: {
-              optional: false,
-              value: "url",
-            },
             linkText: {
               optional: false,
               value: "this",
             },
           },
+          paramsMemo: {
+            linkText: {
+              optional: false,
+              value: "this",
+            },
+          },
+          noContent: true,
         },
       ],
       [
         '      <a href="url">\n        Request a new link.\n      </a>',
         {
-          startPath: ["layout"],
           absPath: ["layout", "request link", "link"],
-          params: {
+          startPath: ["layout"],
+          paramsMemo: {
             url: {
               optional: false,
               value: "url",
             },
           },
+          noContent: false,
         },
       ],
       [
         '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n    </p>',
         {
-          startPath: ["layout"],
           absPath: ["layout", "request link"],
+          startPath: ["layout"],
           params: {
             url: {
               optional: false,
               value: "url",
             },
           },
+          paramsMemo: {
+            url: {
+              optional: false,
+              value: "url",
+            },
+          },
+          noContent: false,
         },
       ],
       [
@@ -132,6 +154,7 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout"],
           startPath: ["layout"],
+          noContent: false,
         },
       ],
     ])
@@ -165,7 +188,7 @@ describe("visitCommentModules", (it) => {
     </p>
   </body>
 </html>
-    `.trim() + "\n"
+        `.trim() + "\n"
     )
 
     expect(stateLog.join("\n")).toBe(
@@ -217,7 +240,7 @@ describe("visitCommentModules", (it) => {
   </body>	[ valid path, body ]
 </html>	[ valid path, body ]
 	[ valid path, body ]
-    `.trim()
+        `.trim()
     )
   })
 })

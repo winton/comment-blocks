@@ -28,26 +28,30 @@ export function plainHtml(
     path,
     (body, comment) => {
       const out = blocks.reduce((memo, block) => {
+        const blockPath = [...path, ...block.path]
+
         if (
           compareArrays(
-            [...path, ...block.path],
-            comment.absPath
+            blockPath,
+            comment.absPath?.slice(0, blockPath.length)
           )
         ) {
-          const out = replaceParams(
-            block.string || body,
-            {
-              ...comment.params,
-              ...options?.params,
-              ...block?.params,
-            },
-            {
-              ...options?.values,
-              ...block.values,
-            }
-          )
+          const html = block.string || body
 
-          if (out !== undefined) {
+          const params = {
+            ...comment.paramsMemo,
+            ...options?.params,
+            ...block?.params,
+          }
+
+          const values = {
+            ...options?.values,
+            ...block.values,
+          }
+
+          const out = replaceParams(html, params, values)
+
+          if (html !== out || !comment.noContent) {
             memo.push(out)
           }
         }

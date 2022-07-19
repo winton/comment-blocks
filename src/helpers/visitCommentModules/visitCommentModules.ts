@@ -6,7 +6,9 @@ import parseComment, {
 
 export interface VisitCommentOptions {
   absPath?: string[]
+  noContent?: boolean
   params?: CommentParams
+  paramsMemo?: CommentParams
   startPath?: string[]
   stateLog?: string[]
 }
@@ -22,6 +24,7 @@ export function visitCommentModules(
 ): string | undefined {
   const output: string[] = []
 
+  let noContent = true
   let lastComment: Comment
 
   while (lines.length) {
@@ -82,12 +85,17 @@ export function visitCommentModules(
                 : [])),
             comment.name,
           ],
-          params: { ...options?.params, ...comment.params },
+          params: comment.params,
+          paramsMemo: {
+            ...options?.params,
+            ...comment.params,
+          },
           startPath: options?.startPath || path,
         }
       )
 
       if (out) {
+        noContent = false
         output.push(out)
       }
     }
@@ -100,6 +108,7 @@ export function visitCommentModules(
           : [],
         startPath: path,
         ...options,
+        noContent,
       })
     : undefined
 }

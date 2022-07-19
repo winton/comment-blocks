@@ -11,7 +11,12 @@ const fixture = readFileSync(
 
 describe("plainHtml", (it) => {
   it("renders fixture", () => {
-    plainHtml(fixture, [{ path: ["layout"] }])
+    plainHtml(fixture, [
+      {
+        path: ["layout"],
+        values: { url: "https://google.com" },
+      },
+    ])
     // console.log(out)
   })
 })
