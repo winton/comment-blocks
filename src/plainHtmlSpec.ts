@@ -77,4 +77,54 @@ hi!
     `.trimEnd()
     )
   })
+
+  it("renders fixture with path", () => {
+    const out = plainHtml(["layout"], fixture, [
+      {
+        path: ["login link"],
+        values: {
+          url: "https://google.com",
+          linkText: "hi!",
+        },
+      },
+      {
+        path: ["login link"],
+        values: {
+          url: "https://google.com",
+          linkText: "hi!",
+        },
+      },
+    ])
+    expect(out).toBe(
+      `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta
+      http-equiv="Content-Type"
+      content="text/html; charset=UTF-8"
+    />
+    <title></title>
+    <style></style>
+  </head>
+
+  <body>
+    <p style="font-size: 18px">
+      🌎&nbsp;
+      <a href="https://google.com">
+hi!
+      </a>
+    </p>
+    <p style="font-size: 18px">
+      🌎&nbsp;
+      <a href="https://google.com">
+hi!
+      </a>
+    </p>
+
+  </body>
+</html>
+    `.trim() + "\n"
+    )
+  })
 })

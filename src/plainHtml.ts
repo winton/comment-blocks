@@ -27,26 +27,59 @@ export function plainHtml(
     lines,
     path,
     (body, comment) => {
+      let childMatch = false
+      let parentMatch = false
+      let paramsMemo: CommentParams = {}
+      let valuesMemo: Record<string, any> = {}
+
       const out = blocks.reduce((memo, block) => {
         const blockPath = [...path, ...(block.path || [])]
 
-        if (
+        const exactMatch = compareArrays(
+          blockPath,
+          comment.absPath
+        )
+
+        childMatch ||=
+          !exactMatch &&
           compareArrays(
             blockPath,
             comment.absPath?.slice(0, blockPath.length)
           )
-        ) {
+
+        parentMatch ||=
+          !exactMatch &&
+          compareArrays(
+            blockPath.slice(
+              0,
+              comment.absPath?.length || 0
+            ),
+            comment.absPath
+          )
+
+        if (exactMatch || childMatch) {
+          paramsMemo = {
+            ...paramsMemo,
+            ...block.params,
+          }
+          valuesMemo = {
+            ...valuesMemo,
+            ...block.values,
+          }
+        }
+
+        if (exactMatch) {
           const html = block.string || body
 
           const params = {
             ...comment.paramsMemo,
             ...options?.params,
-            ...block?.params,
+            ...paramsMemo,
           }
 
           const values = {
             ...options?.values,
-            ...block.values,
+            ...valuesMemo,
           }
 
           const out = replaceParams(html, params, values)
@@ -63,34 +96,24 @@ export function plainHtml(
         return memo
       }, [] as string[])
 
-      const out2 = out.length
-        ? []
-        : blocks.reduce((memo, block) => {
-            const blockPath = [
-              ...path,
-              ...(block.path || []),
-            ]
+      if (childMatch) {
+        return replaceParams(
+          body,
+          {
+            ...comment.paramsMemo,
+            ...options?.params,
+            ...paramsMemo,
+          },
+          {
+            ...options?.values,
+            ...valuesMemo,
+          }
+        )
+      } else if (parentMatch) {
+        return body
+      }
 
-            if (
-              compareArrays(
-                blockPath.slice(
-                  0,
-                  comment.absPath?.length || 0
-                ),
-                comment.absPath
-              )
-            ) {
-              memo.push(block.string || body)
-            }
-
-            return memo
-          }, [] as string[])
-
-      return out.length
-        ? out.join("\n")
-        : out2.length
-        ? out2.join("\n")
-        : undefined
+      return out.length ? out.join("\n") : undefined
     },
     { stateLog: options?.stateLog }
   )
