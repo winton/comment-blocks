@@ -5,30 +5,30 @@ import squashComments from "helpers/squashComments/squashComments"
 import { visitCommentModules } from "helpers/visitCommentModules/visitCommentModules"
 
 export type Blocks = {
-  path: string[]
+  path?: string[]
   params?: CommentParams
   values?: Record<string, any>
   string?: string
 }[]
 
 export function plainHtml(
+  path: string[],
   template: string,
   blocks: Blocks,
   options?: {
-    path?: string[]
     params?: CommentParams
+    stateLog?: string[]
     values?: Record<string, any>
   }
 ): string | undefined {
   const lines = squashComments(template).split("\n")
-  const path = options?.path || []
 
   return visitCommentModules(
     lines,
     path,
     (body, comment) => {
       const out = blocks.reduce((memo, block) => {
-        const blockPath = [...path, ...block.path]
+        const blockPath = [...path, ...(block.path || [])]
 
         if (
           compareArrays(
@@ -59,8 +59,36 @@ export function plainHtml(
         return memo
       }, [] as string[])
 
-      return out.length ? out.join("\n") : undefined
-    }
+      const out2 = out.length
+        ? []
+        : blocks.reduce((memo, block) => {
+            const blockPath = [
+              ...path,
+              ...(block.path || []),
+            ]
+
+            if (
+              compareArrays(
+                blockPath.slice(
+                  0,
+                  comment.absPath?.length || 0
+                ),
+                comment.absPath
+              )
+            ) {
+              memo.push(block.string || body)
+            }
+
+            return memo
+          }, [] as string[])
+
+      return out.length
+        ? out.join("\n")
+        : out2.length
+        ? out2.join("\n")
+        : undefined
+    },
+    { stateLog: options?.stateLog }
   )
 }
 

@@ -11,9 +11,8 @@ const fixture = readFileSync(
 
 describe("plainHtml", (it) => {
   it("renders fixture", () => {
-    const out = plainHtml(fixture, [
+    const out = plainHtml(["layout"], fixture, [
       {
-        path: ["layout"],
         values: {
           url: "https://google.com",
           linkText: "hi!",
@@ -50,6 +49,30 @@ hi!
   </body>
 </html>
     `.trim() + "\n"
+    )
+  })
+
+  it("renders fixture with path", () => {
+    const out = plainHtml(
+      ["layout", "request link"],
+      fixture,
+      [
+        {
+          values: {
+            url: "https://google.com",
+            linkText: "hi!",
+          },
+        },
+      ]
+    )
+    expect(out).toBe(
+      `    <p>
+      This link self destructs after one minute.
+      <a href="https://google.com">
+hi!
+      </a>
+    </p>
+    `.trimEnd()
     )
   })
 })
