@@ -8,6 +8,7 @@ export interface VisitCommentOptions {
   absPath?: string[]
   force?: boolean
   noInnerContent?: boolean
+  noChildContent?: boolean
   params?: CommentParams
   paramsMemo?: CommentParams
   stateLog?: string[]
@@ -24,7 +25,13 @@ export function visitCommentModules(
 ): string | undefined {
   const output: string[] = []
 
+  let noChildContent =
+    options?.noChildContent === undefined
+      ? true
+      : options?.noChildContent
+
   let noInnerContent = true
+
   let lastComment: Comment
 
   while (lines.length) {
@@ -48,6 +55,10 @@ export function visitCommentModules(
       path,
       absPath,
     })
+
+    if (states.includes("empty")) {
+      continue
+    }
 
     if (options?.stateLog) {
       options?.stateLog.push(
@@ -92,6 +103,7 @@ export function visitCommentModules(
       )
 
       if (out) {
+        noChildContent = false
         noInnerContent = false
         output.push(out)
       }
@@ -111,6 +123,7 @@ export function visitCommentModules(
           ...options?.paramsMemo,
           ...lastComment?.params,
         },
+        noChildContent,
         noInnerContent,
       })
     : undefined

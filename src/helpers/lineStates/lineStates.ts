@@ -3,6 +3,7 @@ import lineIndent from "helpers/lineIndent/lineIndent"
 import { Comment } from "helpers/parseComment/parseComment"
 
 export type LineStates = (
+  | "empty"
   | "before comment"
   | "valid path"
   | "comment"
@@ -25,6 +26,10 @@ export default ({
   absPath: string[] | undefined
 }) => {
   const states: LineStates = []
+
+  if (line.length === 0) {
+    states.push("empty")
+  }
 
   if (!comment && !lastComment) {
     states.push("before comment")
@@ -60,7 +65,11 @@ export default ({
     }
   }
 
-  if (!states.includes("inner comment") && comment) {
+  if (
+    !states.includes("end") &&
+    !states.includes("inner comment") &&
+    comment
+  ) {
     states.push("comment")
   }
 
