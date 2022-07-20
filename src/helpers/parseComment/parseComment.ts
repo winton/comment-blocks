@@ -8,6 +8,7 @@ export type CommentParams = Record<string, CommentParam>
 export type Comment =
   | {
       name: string
+      force: boolean
       params: CommentParams | undefined
       spaces: number
     }
@@ -15,17 +16,18 @@ export type Comment =
 
 export default (line: string): Comment => {
   const match = line.match(
-    /(\s*)<!---\s([^\[|]+)(.*)\s--->/
+    /(\s*)<!---\s([^\[!|]+)(!?)(.*)\s--->/
   )
 
   if (match) {
     const spaces = match[1].length
     const name = match[2].trim()
-    const rawParams = match[3]
+    const force = match[3] === "!"
+    const rawParams = match[4]
 
     const params = parseCommentParams(rawParams)
 
-    return { name, params, spaces }
+    return { name, force, params, spaces }
   }
 
   return

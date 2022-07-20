@@ -6,6 +6,7 @@ import parseComment, {
 
 export interface VisitCommentOptions {
   absPath?: string[]
+  force?: boolean
   noInnerContent?: boolean
   params?: CommentParams
   paramsMemo?: CommentParams
@@ -81,6 +82,7 @@ export function visitCommentModules(
         {
           ...options,
           absPath,
+          force: comment.force,
           params: comment.params,
           paramsMemo: {
             ...options?.paramsMemo,
@@ -104,6 +106,7 @@ export function visitCommentModules(
           ...(options?.absPath || []),
           ...(lastComment ? [lastComment.name] : []),
         ],
+        force: options?.force || lastComment?.force,
         paramsMemo: {
           ...options?.paramsMemo,
           ...lastComment?.params,

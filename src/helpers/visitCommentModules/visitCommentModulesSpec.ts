@@ -55,6 +55,7 @@ describe("visitCommentModules", (it) => {
             "link",
             "link text",
           ],
+          force: false,
           paramsMemo: {
             url: {
               optional: true,
@@ -72,6 +73,7 @@ describe("visitCommentModules", (it) => {
         '      <a href="url">\n        Click here to access\n      </a>',
         {
           absPath: ["layout", "login link", "link"],
+          force: false,
           paramsMemo: {
             url: {
               optional: true,
@@ -91,6 +93,7 @@ describe("visitCommentModules", (it) => {
             },
           },
           absPath: ["layout", "login link"],
+          force: false,
           paramsMemo: {
             url: {
               optional: true,
@@ -115,6 +118,7 @@ describe("visitCommentModules", (it) => {
             "link",
             "link text",
           ],
+          force: false,
           paramsMemo: {
             url: {
               optional: false,
@@ -131,7 +135,8 @@ describe("visitCommentModules", (it) => {
       [
         '      <a href="url">\n        Request a new link.\n      </a>',
         {
-          absPath: ["layout", "request link", "link"],
+          absPath: ["layout", "request link", "force"],
+          force: true,
           paramsMemo: {
             url: {
               optional: false,
@@ -142,7 +147,21 @@ describe("visitCommentModules", (it) => {
         },
       ],
       [
-        '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n    </p>',
+        "      Force this.",
+        {
+          absPath: ["layout", "request link", "force"],
+          force: true,
+          paramsMemo: {
+            url: {
+              optional: false,
+              value: "url",
+            },
+          },
+          noInnerContent: true,
+        },
+      ],
+      [
+        '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>',
         {
           params: {
             url: {
@@ -151,6 +170,7 @@ describe("visitCommentModules", (it) => {
             },
           },
           absPath: ["layout", "request link"],
+          force: false,
           paramsMemo: {
             url: {
               optional: false,
@@ -161,9 +181,10 @@ describe("visitCommentModules", (it) => {
         },
       ],
       [
-        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n    </p>\n  </body>\n</html>\n',
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n  </body>\n</html>\n',
         {
           absPath: ["layout"],
+          force: false,
           paramsMemo: {},
           noInnerContent: false,
         },
@@ -196,6 +217,7 @@ describe("visitCommentModules", (it) => {
       <a href="url">
         Request a new link.
       </a>
+      Force this.
     </p>
   </body>
 </html>
@@ -245,6 +267,10 @@ describe("visitCommentModules", (it) => {
         Request a new link.	[ valid path, body ]
       </a>	[ valid path, end ]
       </a>	[ valid path, body ]
+      <!--- force! --->	[ valid path, end, comment ]
+      <!--- force! --->	[ valid path, inner comment ]
+      <!--- force! --->	[ valid path, comment ]
+      Force this.	[ valid path, body ]
     </p>	[ valid path, end ]
     </p>	[ valid path, body ]
   </body>	[ valid path, end ]
@@ -299,6 +325,7 @@ describe("visitCommentModules", (it) => {
             "link",
             "link text",
           ],
+          force: false,
           paramsMemo: {
             url: {
               optional: true,
@@ -316,6 +343,7 @@ describe("visitCommentModules", (it) => {
         '      <a href="url">\n        Click here to access\n      </a>',
         {
           absPath: ["layout", "login link", "link"],
+          force: false,
           paramsMemo: {
             url: {
               optional: true,
@@ -335,6 +363,7 @@ describe("visitCommentModules", (it) => {
             },
           },
           absPath: ["layout", "login link"],
+          force: false,
           paramsMemo: {
             url: {
               optional: true,
@@ -348,6 +377,7 @@ describe("visitCommentModules", (it) => {
         '    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>',
         {
           absPath: ["layout"],
+          force: false,
           paramsMemo: {},
           noInnerContent: false,
         },
@@ -355,15 +385,13 @@ describe("visitCommentModules", (it) => {
     ])
 
     expect(out).toBe(
-      "    " +
-        `
-    <p style="font-size: 18px">
+      `    <p style="font-size: 18px">
       🌎&nbsp;
       <a href="url">
         Click here to access
       </a>
     </p>
-    `.trim()
+    `.trimEnd()
     )
 
     expect(log).toBe(
@@ -409,6 +437,10 @@ describe("visitCommentModules", (it) => {
         Request a new link.	[ body ]
       </a>	[ end ]
       </a>	[ body ]
+      <!--- force! --->	[ end, comment ]
+      <!--- force! --->	[ inner comment ]
+      <!--- force! --->	[ comment ]
+      Force this.	[ body ]
     </p>	[ end ]
     </p>	[ body ]
   </body>	[ end ]
