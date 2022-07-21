@@ -7,30 +7,34 @@ import parseComment, {
 export interface VisitCommentOptions {
   absPath?: string[]
   force?: boolean
-  noInnerContent?: boolean
   noChildContent?: boolean
   params?: CommentParams
   paramsMemo?: CommentParams
   stateLog?: string[]
 }
 
+export interface VisitCommentLine {
+  line: string
+  isChild?: boolean
+}
+
 export function visitCommentModules(
   lines: string[],
   path: string[],
   callback: (
-    body: string,
+    html: string,
+    lines: VisitCommentLine[],
     options: VisitCommentOptions
   ) => string | undefined,
   options?: VisitCommentOptions
 ): string | undefined {
-  const output: string[] = []
+  const output: VisitCommentLine[] = []
+  const rawOutput: string[] = []
 
   let noChildContent =
     options?.noChildContent === undefined
       ? true
       : options?.noChildContent
-
-  let noInnerContent = true
 
   let lastComment: Comment
 
@@ -75,7 +79,8 @@ export function visitCommentModules(
       !states.includes("before comment") &&
       states.includes("valid path")
     ) {
-      output.push(line)
+      output.push({ line })
+      rawOutput.push(line)
     }
 
     if (states.includes("end")) {
@@ -104,14 +109,14 @@ export function visitCommentModules(
 
       if (out) {
         noChildContent = false
-        noInnerContent = false
-        output.push(out)
+        output.push({ line: out, isChild: true })
+        rawOutput.push(out)
       }
     }
   }
 
   return output.length
-    ? callback(output.join("\n"), {
+    ? callback(rawOutput.join("\n"), output, {
         params: lastComment?.params,
         ...options,
         absPath: [
@@ -124,7 +129,6 @@ export function visitCommentModules(
           ...lastComment?.params,
         },
         noChildContent,
-        noInnerContent,
       })
     : undefined
 }

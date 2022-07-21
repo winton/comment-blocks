@@ -29,7 +29,7 @@ export function plainHtml(
   return visitCommentModules(
     lines,
     path,
-    (body, comment) => {
+    (html, lines, comment) => {
       let valuesMemo: Record<string, any> = {}
 
       const blockMatches = blocks.reduce(
@@ -90,9 +90,7 @@ export function plainHtml(
         const hasContent = !comment.noChildContent
 
         if (block.isMatch || block.isChild) {
-          const html = block.isMatch
-            ? block.string || body
-            : body
+          const finalLines: string[] = []
 
           const params = {
             ...comment.paramsMemo,
@@ -104,22 +102,58 @@ export function plainHtml(
             ...valuesMemo,
           }
 
-          const out = replaceParams(html, params, values)
+          if (block.isMatch && block.string) {
+            finalLines.push(
+              replaceParams(block.string, params, values)
+            )
+          } else {
+            let chunks: string[] = []
+
+            for (const { line, isChild } of lines) {
+              if (isChild) {
+                if (chunks.length) {
+                  finalLines.push(
+                    replaceParams(
+                      chunks.join("\n"),
+                      params,
+                      values
+                    )
+                  )
+                  chunks = []
+                }
+                finalLines.push(line)
+              } else {
+                chunks.push(line)
+              }
+            }
+
+            if (chunks.length) {
+              finalLines.push(
+                replaceParams(
+                  chunks.join("\n"),
+                  params,
+                  values
+                )
+              )
+            }
+          }
+
+          const finalHtml = finalLines.join("\n")
 
           if (
             block.isMatch ||
-            html !== out ||
+            finalHtml !== html ||
             hasContent ||
             (block.isChild && comment.force)
           ) {
-            memo.push(out)
+            memo.push(finalHtml)
           }
         } else if (
           block.isParent &&
           hasContent &&
           !memo.length
         ) {
-          memo.push(body)
+          memo.push(html)
         }
 
         return memo
