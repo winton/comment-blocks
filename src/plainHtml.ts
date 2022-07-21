@@ -97,27 +97,31 @@ export function plainHtml(
         })
       }
 
+      const params = {
+        ...comment.paramsMemo,
+        ...options?.params,
+      }
+
+      const values = {
+        ...options?.values,
+        ...valuesMemo,
+      }
+
       const out = blockMatches.reduce((memo, block) => {
         if (
           block.isMatch ||
           (!hasMatch && block.isParent && !memo.length)
         ) {
           const finalLines: string[] = []
-
-          const params = {
-            ...comment.paramsMemo,
-            ...options?.params,
-            ...block.params,
-          }
-
-          const values = {
-            ...options?.values,
-            ...valuesMemo,
-            ...block.values,
-          }
+          const finalParams = { ...params, ...block.params }
+          const finalValues = { ...values, ...block.values }
 
           if (options?.debug) {
-            console.debug({ block, params, values })
+            console.debug({
+              block,
+              finalParams,
+              finalValues,
+            })
           }
 
           if (block.isMatch && block.string) {
@@ -133,8 +137,8 @@ export function plainHtml(
                   finalLines.push(
                     replaceParams(
                       chunks.join("\n"),
-                      params,
-                      values
+                      finalParams,
+                      finalValues
                     )
                   )
                   chunks = []
@@ -149,8 +153,8 @@ export function plainHtml(
               finalLines.push(
                 replaceParams(
                   chunks.join("\n"),
-                  params,
-                  values
+                  finalParams,
+                  finalValues
                 )
               )
             }
@@ -158,9 +162,19 @@ export function plainHtml(
 
           const finalHtml = finalLines.join("\n")
 
+          if (options?.debug) {
+            console.debug([
+              block.isMatch,
+              !block.params,
+              finalHtml !== html,
+              !hasMatch && comment.force,
+            ])
+          }
+
           if (
             block.isMatch ||
-            !block.params ||
+            !params ||
+            (params && !Object.keys(params).length) ||
             finalHtml !== html ||
             (!hasMatch && comment.force)
           ) {
