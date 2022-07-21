@@ -161,7 +161,8 @@ export function plainHtml(
           if (
             block.isMatch ||
             !block.params ||
-            finalHtml !== html
+            finalHtml !== html ||
+            (!hasMatch && comment.force)
           ) {
             memo.push(finalHtml)
           }

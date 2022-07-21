@@ -149,12 +149,22 @@ describe("visitCommentModules", (it) => {
       [
         "      Force this.",
         {
+          params: {
+            someVar: {
+              optional: false,
+              value: "blah",
+            },
+          },
           absPath: ["layout", "request link", "force"],
           force: true,
           paramsMemo: {
             url: {
               optional: false,
               value: "url",
+            },
+            someVar: {
+              optional: false,
+              value: "blah",
             },
           },
           noChildContent: true,
@@ -263,9 +273,9 @@ describe("visitCommentModules", (it) => {
         Request a new link.	[ valid path, body ]
       </a>	[ valid path, end ]
       </a>	[ valid path, body ]
-      <!--- force! --->	[ valid path, end ]
-      <!--- force! --->	[ valid path, inner comment ]
-      <!--- force! --->	[ valid path, comment ]
+      <!--- force! | someVar: blah --->	[ valid path, end ]
+      <!--- force! | someVar: blah --->	[ valid path, inner comment ]
+      <!--- force! | someVar: blah --->	[ valid path, comment ]
       Force this.	[ valid path, body ]
     </p>	[ valid path, end ]
     </p>	[ valid path, body ]
@@ -430,9 +440,9 @@ describe("visitCommentModules", (it) => {
         Request a new link.	[ body ]
       </a>	[ end ]
       </a>	[ body ]
-      <!--- force! --->	[ end ]
-      <!--- force! --->	[ inner comment ]
-      <!--- force! --->	[ comment ]
+      <!--- force! | someVar: blah --->	[ end ]
+      <!--- force! | someVar: blah --->	[ inner comment ]
+      <!--- force! | someVar: blah --->	[ comment ]
       Force this.	[ body ]
     </p>	[ end ]
     </p>	[ body ]
