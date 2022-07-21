@@ -62,7 +62,7 @@ export function plainHtml(
               comment.absPath?.slice(0, blockPath.length)
             )
 
-          if (isMatch || isParent) {
+          if (isParent) {
             valuesMemo = {
               ...valuesMemo,
               ...block.values,
@@ -112,6 +112,7 @@ export function plainHtml(
           const values = {
             ...options?.values,
             ...valuesMemo,
+            ...block.values,
           }
 
           if (block.isMatch && block.string) {
