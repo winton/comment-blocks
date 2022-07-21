@@ -182,6 +182,7 @@ export function plainHtml(
           }
         } else if (
           block.isChild &&
+          !hasMatch &&
           hasContent &&
           !memo.length
         ) {
