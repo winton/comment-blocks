@@ -72,6 +72,7 @@ export function plainHtml(
           hasMatch ||= isMatch
 
           memo.push({
+            ...block,
             isChild,
             isParent,
             isMatch,
@@ -92,7 +93,6 @@ export function plainHtml(
         console.debug({
           comment,
           blockMatches,
-          valuesMemo,
           hasMatch,
         })
       }
@@ -107,12 +107,17 @@ export function plainHtml(
           const params = {
             ...comment.paramsMemo,
             ...options?.params,
+            ...block.params,
           }
 
           const values = {
             ...options?.values,
             ...valuesMemo,
             ...block.values,
+          }
+
+          if (options?.debug) {
+            console.debug({ block, params, values })
           }
 
           if (block.isMatch && block.string) {
