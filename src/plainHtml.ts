@@ -14,7 +14,7 @@ export type Block = {
 export type Blocks = Block[]
 
 export function plainHtml(
-  path: string[],
+  path: [string, ...string[]],
   template: string,
   blocks: Blocks,
   options?: {
@@ -30,7 +30,11 @@ export function plainHtml(
     lines,
     path,
     (html, lines, comment) => {
+      const hasContent = !comment.noChildContent
+
       let valuesMemo: Record<string, any> = {}
+
+      let hasMatch = false
 
       const blockMatches = blocks.reduce(
         (memo, block) => {
@@ -44,13 +48,6 @@ export function plainHtml(
           const isChild =
             !isMatch &&
             compareArrays(
-              blockPath,
-              comment.absPath?.slice(0, blockPath.length)
-            )
-
-          const isParent =
-            !isMatch &&
-            compareArrays(
               blockPath.slice(
                 0,
                 comment.absPath?.length || 0
@@ -58,12 +55,21 @@ export function plainHtml(
               comment.absPath
             )
 
-          if (isMatch || isChild) {
+          const isParent =
+            !isMatch &&
+            compareArrays(
+              blockPath,
+              comment.absPath?.slice(0, blockPath.length)
+            )
+
+          if (isMatch || isParent) {
             valuesMemo = {
               ...valuesMemo,
               ...block.values,
             }
           }
+
+          hasMatch ||= isMatch
 
           memo.push({
             isChild,
@@ -83,13 +89,19 @@ export function plainHtml(
       )
 
       if (options?.debug) {
-        console.debug({ comment, blockMatches, valuesMemo })
+        console.debug({
+          comment,
+          blockMatches,
+          valuesMemo,
+          hasMatch,
+        })
       }
 
       const out = blockMatches.reduce((memo, block) => {
-        const hasContent = !comment.noChildContent
-
-        if (block.isMatch || block.isChild) {
+        if (
+          block.isMatch ||
+          (!hasMatch && block.isParent && !memo.length)
+        ) {
           const finalLines: string[] = []
 
           const params = {
@@ -142,14 +154,13 @@ export function plainHtml(
 
           if (
             block.isMatch ||
-            finalHtml !== html ||
-            hasContent ||
-            (block.isChild && comment.force)
+            !block.params ||
+            finalHtml !== html
           ) {
             memo.push(finalHtml)
           }
         } else if (
-          block.isParent &&
+          block.isChild &&
           hasContent &&
           !memo.length
         ) {

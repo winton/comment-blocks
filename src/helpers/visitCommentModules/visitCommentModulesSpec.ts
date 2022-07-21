@@ -19,7 +19,7 @@ describe("visitCommentModules", (it) => {
     const out = visitCommentModules(
       lines,
       ["layout"],
-      (result, options) => {
+      (result, lines, options) => {
         callbacks.push([
           result,
           { ...options, stateLog: undefined },
@@ -36,7 +36,7 @@ describe("visitCommentModules", (it) => {
     // console.log(log)
 
     // expect(callbacks).toEqual()
-    // expect(out).toBe(``.trim() + "\n")
+    // expect(out).toBe(``.trim())
     // expect(log).toBe(``.trim())
 
     expect(callbacks).toEqual([
@@ -66,7 +66,7 @@ describe("visitCommentModules", (it) => {
               value: "this",
             },
           },
-          noInnerContent: true,
+          noChildContent: true,
         },
       ],
       [
@@ -80,7 +80,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noInnerContent: false,
+          noChildContent: false,
         },
       ],
       [
@@ -100,7 +100,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noInnerContent: false,
+          noChildContent: false,
         },
       ],
       [
@@ -129,21 +129,21 @@ describe("visitCommentModules", (it) => {
               value: "this",
             },
           },
-          noInnerContent: true,
+          noChildContent: true,
         },
       ],
       [
         '      <a href="url">\n        Request a new link.\n      </a>',
         {
-          absPath: ["layout", "request link", "force"],
-          force: true,
+          absPath: ["layout", "request link", "link"],
+          force: false,
           paramsMemo: {
             url: {
               optional: false,
               value: "url",
             },
           },
-          noInnerContent: false,
+          noChildContent: false,
         },
       ],
       [
@@ -157,7 +157,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noInnerContent: true,
+          noChildContent: true,
         },
       ],
       [
@@ -177,16 +177,16 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noInnerContent: false,
+          noChildContent: false,
         },
       ],
       [
-        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n  </body>\n</html>\n',
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n  </body>\n</html>',
         {
           absPath: ["layout"],
           force: false,
           paramsMemo: {},
-          noInnerContent: false,
+          noChildContent: false,
         },
       ],
     ])
@@ -203,7 +203,6 @@ describe("visitCommentModules", (it) => {
     <title></title>
     <style></style>
   </head>
-
   <body>
     <p style="font-size: 18px">
       🌎&nbsp;
@@ -211,7 +210,6 @@ describe("visitCommentModules", (it) => {
         Click here to access
       </a>
     </p>
-
     <p>
       This link self destructs after one minute.
       <a href="url">
@@ -221,7 +219,7 @@ describe("visitCommentModules", (it) => {
     </p>
   </body>
 </html>
-    `.trim() + "\n"
+    `.trim()
     )
 
     expect(log).toBe(
@@ -237,7 +235,6 @@ describe("visitCommentModules", (it) => {
     <title></title>	[ valid path, body ]
     <style></style>	[ valid path, body ]
   </head>	[ valid path, body ]
-	[ valid path, body ]
   <body>	[ valid path, body ]
     <!--- login link | url?: url --->	[ valid path, inner comment ]
     <!--- login link | url?: url --->	[ valid path, comment ]
@@ -253,8 +250,7 @@ describe("visitCommentModules", (it) => {
       </a>	[ valid path, body ]
     </p>	[ valid path, end ]
     </p>	[ valid path, body ]
-	[ valid path, end ]
-	[ valid path, body ]
+    <!--- request link | url: url --->	[ valid path, end ]
     <!--- request link | url: url --->	[ valid path, inner comment ]
     <!--- request link | url: url --->	[ valid path, comment ]
     <p>	[ valid path, body ]
@@ -267,7 +263,7 @@ describe("visitCommentModules", (it) => {
         Request a new link.	[ valid path, body ]
       </a>	[ valid path, end ]
       </a>	[ valid path, body ]
-      <!--- force! --->	[ valid path, end, comment ]
+      <!--- force! --->	[ valid path, end ]
       <!--- force! --->	[ valid path, inner comment ]
       <!--- force! --->	[ valid path, comment ]
       Force this.	[ valid path, body ]
@@ -276,7 +272,6 @@ describe("visitCommentModules", (it) => {
   </body>	[ valid path, end ]
   </body>	[ valid path, body ]
 </html>	[ valid path, body ]
-	[ valid path, body ]
     `.trim()
     )
   })
@@ -289,7 +284,7 @@ describe("visitCommentModules", (it) => {
     const out = visitCommentModules(
       lines,
       ["layout", "login link"],
-      (result, options) => {
+      (result, lines, options) => {
         callbacks.push([
           result,
           { ...options, stateLog: undefined },
@@ -306,7 +301,7 @@ describe("visitCommentModules", (it) => {
     // console.log(log)
 
     // expect(callbacks).toEqual()
-    // expect(out).toBe(``.trim() + "\n")
+    // expect(out).toBe(``.trimEnd())
     // expect(log).toBe(``.trim())
 
     expect(callbacks).toEqual([
@@ -336,7 +331,7 @@ describe("visitCommentModules", (it) => {
               value: "this",
             },
           },
-          noInnerContent: true,
+          noChildContent: true,
         },
       ],
       [
@@ -350,7 +345,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noInnerContent: false,
+          noChildContent: false,
         },
       ],
       [
@@ -370,7 +365,7 @@ describe("visitCommentModules", (it) => {
               value: "url",
             },
           },
-          noInnerContent: false,
+          noChildContent: false,
         },
       ],
       [
@@ -379,7 +374,7 @@ describe("visitCommentModules", (it) => {
           absPath: ["layout"],
           force: false,
           paramsMemo: {},
-          noInnerContent: false,
+          noChildContent: false,
         },
       ],
     ])
@@ -407,7 +402,6 @@ describe("visitCommentModules", (it) => {
     <title></title>	[ body ]
     <style></style>	[ body ]
   </head>	[ body ]
-	[ body ]
   <body>	[ body ]
     <!--- login link | url?: url --->	[ inner comment ]
     <!--- login link | url?: url --->	[ comment ]
@@ -423,8 +417,7 @@ describe("visitCommentModules", (it) => {
       </a>	[ valid path, body ]
     </p>	[ valid path, end ]
     </p>	[ valid path, body ]
-	[ valid path, end ]
-	[ body ]
+    <!--- request link | url: url --->	[ valid path, end ]
     <!--- request link | url: url --->	[ inner comment ]
     <!--- request link | url: url --->	[ comment ]
     <p>	[ body ]
@@ -437,7 +430,7 @@ describe("visitCommentModules", (it) => {
         Request a new link.	[ body ]
       </a>	[ end ]
       </a>	[ body ]
-      <!--- force! --->	[ end, comment ]
+      <!--- force! --->	[ end ]
       <!--- force! --->	[ inner comment ]
       <!--- force! --->	[ comment ]
       Force this.	[ body ]
@@ -446,7 +439,6 @@ describe("visitCommentModules", (it) => {
   </body>	[ end ]
   </body>	[ body ]
 </html>	[ body ]
-	[ body ]
     `.trim()
     )
   })

@@ -31,7 +31,6 @@ describe("plainHtml", (it) => {
     <title></title>
     <style></style>
   </head>
-
   <body>
     <p style="font-size: 18px">
       🌎&nbsp;
@@ -39,7 +38,6 @@ describe("plainHtml", (it) => {
 hi!
       </a>
     </p>
-
     <p>
       This link self destructs after one minute.
       <a href="https://google.com">
@@ -49,7 +47,7 @@ hi!
     </p>
   </body>
 </html>
-    `.trim() + "\n"
+    `.trim()
     )
   })
 
@@ -95,6 +93,7 @@ hi!
         },
       },
     ])
+
     expect(out).toBe(
       `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -107,7 +106,6 @@ hi!
     <title></title>
     <style></style>
   </head>
-
   <body>
     <p style="font-size: 18px">
       🌎&nbsp;
@@ -121,10 +119,9 @@ hi!
 hi!
       </a>
     </p>
-
   </body>
 </html>
-    `.trim() + "\n"
+    `.trim()
     )
   })
 })
