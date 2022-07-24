@@ -9,13 +9,7 @@ export interface VisitCommentOptions {
   force?: boolean
   noChildContent?: boolean
   params?: CommentParams
-  paramsMemo?: CommentParams
   stateLog?: string[]
-}
-
-export interface VisitCommentLine {
-  line: string
-  isChild?: boolean
 }
 
 export function visitCommentModules(
@@ -23,12 +17,12 @@ export function visitCommentModules(
   path: string[],
   callback: (
     html: string,
-    lines: VisitCommentLine[],
+    lines: string[],
     options: VisitCommentOptions
   ) => string | undefined,
   options?: VisitCommentOptions
 ): string | undefined {
-  const output: VisitCommentLine[] = []
+  const output: string[] = []
   const rawOutput: string[] = []
 
   let noChildContent =
@@ -79,7 +73,7 @@ export function visitCommentModules(
       !states.includes("before comment") &&
       states.includes("valid path")
     ) {
-      output.push({ line })
+      output.push(line)
       rawOutput.push(line)
     }
 
@@ -100,16 +94,12 @@ export function visitCommentModules(
           absPath,
           force: comment.force,
           params: comment.params,
-          paramsMemo: {
-            ...options?.paramsMemo,
-            ...comment.params,
-          },
         }
       )
 
       if (out) {
         noChildContent = false
-        output.push({ line: out, isChild: true })
+        output.push(out)
         rawOutput.push(out)
       }
     }
@@ -124,10 +114,6 @@ export function visitCommentModules(
           ...(lastComment ? [lastComment.name] : []),
         ],
         force: options?.force || lastComment?.force,
-        paramsMemo: {
-          ...options?.paramsMemo,
-          ...lastComment?.params,
-        },
         noChildContent,
       })
     : undefined

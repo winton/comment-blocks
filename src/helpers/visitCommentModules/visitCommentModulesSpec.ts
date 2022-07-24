@@ -56,16 +56,6 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: true,
-              value: "url",
-            },
-            linkText: {
-              optional: false,
-              value: "this",
-            },
-          },
           noChildContent: true,
         },
       ],
@@ -74,12 +64,6 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "login link", "link"],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: true,
-              value: "url",
-            },
-          },
           noChildContent: false,
         },
       ],
@@ -94,12 +78,6 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "login link"],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: true,
-              value: "url",
-            },
-          },
           noChildContent: false,
         },
       ],
@@ -119,16 +97,6 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: false,
-              value: "url",
-            },
-            linkText: {
-              optional: false,
-              value: "this",
-            },
-          },
           noChildContent: true,
         },
       ],
@@ -137,12 +105,6 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "request link", "link"],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: false,
-              value: "url",
-            },
-          },
           noChildContent: false,
         },
       ],
@@ -157,16 +119,6 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "request link", "force"],
           force: true,
-          paramsMemo: {
-            url: {
-              optional: false,
-              value: "url",
-            },
-            someVar: {
-              optional: false,
-              value: "blah",
-            },
-          },
           noChildContent: true,
         },
       ],
@@ -181,12 +133,6 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "request link"],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: false,
-              value: "url",
-            },
-          },
           noChildContent: false,
         },
       ],
@@ -195,7 +141,6 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout"],
           force: false,
-          paramsMemo: {},
           noChildContent: false,
         },
       ],
@@ -331,16 +276,6 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: true,
-              value: "url",
-            },
-            linkText: {
-              optional: false,
-              value: "this",
-            },
-          },
           noChildContent: true,
         },
       ],
@@ -349,12 +284,6 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "login link", "link"],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: true,
-              value: "url",
-            },
-          },
           noChildContent: false,
         },
       ],
@@ -369,12 +298,6 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "login link"],
           force: false,
-          paramsMemo: {
-            url: {
-              optional: true,
-              value: "url",
-            },
-          },
           noChildContent: false,
         },
       ],
@@ -383,7 +306,6 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout"],
           force: false,
-          paramsMemo: {},
           noChildContent: false,
         },
       ],

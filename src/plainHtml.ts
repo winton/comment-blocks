@@ -98,7 +98,7 @@ export function plainHtml(
       }
 
       const params = {
-        ...comment.paramsMemo,
+        ...comment?.params,
         ...options?.params,
       }
 
@@ -126,38 +126,20 @@ export function plainHtml(
 
           if (block.isMatch && block.string) {
             finalLines.push(
-              replaceParams(block.string, params, values)
+              replaceParams(
+                block.string,
+                finalParams,
+                finalValues
+              )
             )
           } else {
-            let chunks: string[] = []
-
-            for (const { line, isChild } of lines) {
-              if (isChild) {
-                if (chunks.length) {
-                  finalLines.push(
-                    replaceParams(
-                      chunks.join("\n"),
-                      finalParams,
-                      finalValues
-                    )
-                  )
-                  chunks = []
-                }
-                finalLines.push(line)
-              } else {
-                chunks.push(line)
-              }
-            }
-
-            if (chunks.length) {
-              finalLines.push(
-                replaceParams(
-                  chunks.join("\n"),
-                  finalParams,
-                  finalValues
-                )
+            finalLines.push(
+              replaceParams(
+                lines.join("\n"),
+                finalParams,
+                finalValues
               )
-            }
+            )
           }
 
           const finalHtml = finalLines.join("\n")
