@@ -162,10 +162,20 @@ export function plainHtml(
 
           const finalHtml = finalLines.join("\n")
 
+          let paramCount = 0
+
+          if (params) {
+            for (const key in params) {
+              if (!params[key].optional) {
+                paramCount++
+              }
+            }
+          }
+
           if (options?.debug) {
             console.debug([
               block.isMatch,
-              !block.params,
+              paramCount === 0,
               finalHtml !== html,
               !hasMatch && comment.force,
             ])
@@ -173,8 +183,7 @@ export function plainHtml(
 
           if (
             block.isMatch ||
-            !params ||
-            (params && !Object.keys(params).length) ||
+            paramCount === 0 ||
             finalHtml !== html ||
             (!hasMatch && comment.force)
           ) {

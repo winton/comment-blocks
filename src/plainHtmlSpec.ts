@@ -38,13 +38,6 @@ describe("plainHtml", (it) => {
 hi!
       </a>
     </p>
-    <p>
-      This link self destructs after one minute.
-      <a href="https://google.com">
-hi!
-      </a>
-      Force this.
-    </p>
   </body>
 </html>
     `.trim()
