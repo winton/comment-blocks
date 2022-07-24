@@ -169,10 +169,8 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "request link"],
           force: false,
-          refMatch: [
+          refMatch:
             "    <!--- [ layout, request link ] --->",
-            ["layout", "request link"],
-          ],
           refs: [
             [
               "    <!--- [ layout, request link ] --->",

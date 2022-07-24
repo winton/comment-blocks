@@ -196,7 +196,7 @@ export function plainHtml(
         const finalOut = out.join("\n")
 
         if (comment.refMatch) {
-          refValues[comment.refMatch[0]] = finalOut
+          refValues[comment.refMatch] = finalOut
         }
 
         return finalOut

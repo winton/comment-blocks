@@ -8,7 +8,7 @@ import parseComment, {
 export interface VisitCommentOptions {
   absPath?: string[]
   force?: boolean
-  refMatch?: [string, string[]]
+  refMatch?: string
   refs?: [string, string[]][]
   noChildContent?: boolean
   params?: CommentParams
@@ -97,6 +97,10 @@ export function visitCommentModules(
     if (states.includes("inner comment") && comment) {
       lines.unshift(line)
 
+      const refMatch = refs.find(([, path]) =>
+        compareArrays(absPath, path)
+      )
+
       const out = visitCommentModules(
         lines,
         path,
@@ -106,9 +110,7 @@ export function visitCommentModules(
           absPath,
           force: comment.force,
           params: comment.params,
-          refMatch: refs.find(([, path]) =>
-            compareArrays(absPath, path)
-          ),
+          refMatch: refMatch ? refMatch[0] : undefined,
           refs,
         }
       )
@@ -127,15 +129,17 @@ export function visitCommentModules(
       ...(lastComment?.name ? [lastComment.name] : []),
     ]
 
+    const refMatch = refs.find(([, path]) =>
+      compareArrays(absPath, path)
+    )
+
     return callback(rawOutput.join("\n"), output, {
       params: lastComment?.params,
       ...options,
       absPath,
       force: options?.force || lastComment?.force,
       noChildContent,
-      refMatch: refs.find(([, path]) =>
-        compareArrays(absPath, path)
-      ),
+      refMatch: refMatch ? refMatch[0] : undefined,
       refs,
     })
   }
