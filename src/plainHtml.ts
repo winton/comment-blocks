@@ -1,4 +1,5 @@
 import compareArrays from "helpers/compareArrays/compareArrays"
+import escapeRegExp from "helpers/escapeRegExp/escapeRegExp"
 import { CommentParams } from "helpers/parseComment/parseComment"
 import replaceParams from "helpers/replaceParams/replaceParams"
 import squashComments from "helpers/squashComments/squashComments"
@@ -25,8 +26,9 @@ export function plainHtml(
   }
 ): string | undefined {
   const lines = squashComments(template).split("\n")
+  const refValues: Record<string, string> = {}
 
-  return visitCommentModules(
+  let out = visitCommentModules(
     lines,
     path,
     (html, lines, comment) => {
@@ -190,10 +192,29 @@ export function plainHtml(
         )
       }
 
-      return out.length ? out.join("\n") : undefined
+      if (out.length) {
+        const finalOut = out.join("\n")
+
+        if (comment.refMatch) {
+          refValues[comment.refMatch[0]] = finalOut
+        }
+
+        return finalOut
+      }
+
+      return undefined
     },
     { stateLog: options?.stateLog }
   )
+
+  for (const line in refValues) {
+    out = out?.replace(
+      new RegExp("^" + escapeRegExp(line) + "$", "gm"),
+      refValues[line]
+    )
+  }
+
+  return out
 }
 
 export default plainHtml

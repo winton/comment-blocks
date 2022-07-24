@@ -1,3 +1,4 @@
+import compareArrays from "helpers/compareArrays/compareArrays"
 import lineStates from "helpers/lineStates/lineStates"
 import parseComment, {
   Comment,
@@ -7,6 +8,8 @@ import parseComment, {
 export interface VisitCommentOptions {
   absPath?: string[]
   force?: boolean
+  refMatch?: [string, string[]]
+  refs?: [string, string[]][]
   noChildContent?: boolean
   params?: CommentParams
   stateLog?: string[]
@@ -32,6 +35,15 @@ export function visitCommentModules(
 
   let lastComment: Comment
 
+  const refs =
+    options?.refs ||
+    (lines
+      .map((line) => {
+        const ref = parseComment(line)?.ref
+        return ref ? [line, ref] : undefined
+      })
+      .filter((ref) => ref) as [string, string[]][])
+
   while (lines.length) {
     const line = lines.shift()
 
@@ -43,7 +55,7 @@ export function visitCommentModules(
 
     const absPath = [
       ...(options?.absPath || []),
-      ...(lastComment ? [lastComment.name] : []),
+      ...(lastComment?.name ? [lastComment.name] : []),
     ]
 
     const states = lineStates({
@@ -94,6 +106,10 @@ export function visitCommentModules(
           absPath,
           force: comment.force,
           params: comment.params,
+          refMatch: refs.find(([, path]) =>
+            compareArrays(absPath, path)
+          ),
+          refs,
         }
       )
 
@@ -105,16 +121,24 @@ export function visitCommentModules(
     }
   }
 
-  return output.length
-    ? callback(rawOutput.join("\n"), output, {
-        params: lastComment?.params,
-        ...options,
-        absPath: [
-          ...(options?.absPath || []),
-          ...(lastComment ? [lastComment.name] : []),
-        ],
-        force: options?.force || lastComment?.force,
-        noChildContent,
-      })
-    : undefined
+  if (output.length) {
+    const absPath = [
+      ...(options?.absPath || []),
+      ...(lastComment?.name ? [lastComment.name] : []),
+    ]
+
+    return callback(rawOutput.join("\n"), output, {
+      params: lastComment?.params,
+      ...options,
+      absPath,
+      force: options?.force || lastComment?.force,
+      noChildContent,
+      refMatch: refs.find(([, path]) =>
+        compareArrays(absPath, path)
+      ),
+      refs,
+    })
+  }
+
+  return undefined
 }

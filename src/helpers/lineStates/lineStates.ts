@@ -10,6 +10,7 @@ export type LineStates = (
   | "body"
   | "end"
   | "inner comment"
+  | "ref"
 )[]
 
 export default ({
@@ -29,6 +30,11 @@ export default ({
 
   if (line.length === 0) {
     states.push("empty")
+  }
+
+  if (comment?.ref) {
+    comment = undefined
+    states.push("ref")
   }
 
   if (!comment && !lastComment) {

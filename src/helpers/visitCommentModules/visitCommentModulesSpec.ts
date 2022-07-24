@@ -56,6 +56,12 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: true,
         },
       ],
@@ -64,6 +70,12 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "login link", "link"],
           force: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: false,
         },
       ],
@@ -78,6 +90,12 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "login link"],
           force: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: false,
         },
       ],
@@ -97,6 +115,12 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: true,
         },
       ],
@@ -105,6 +129,12 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "request link", "link"],
           force: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: false,
         },
       ],
@@ -119,11 +149,17 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "request link", "force"],
           force: true,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: true,
         },
       ],
       [
-        '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>',
+        '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n    \n    <!--- [ layout, request link ] --->',
         {
           params: {
             url: {
@@ -133,15 +169,31 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "request link"],
           force: false,
+          refMatch: [
+            "    <!--- [ layout, request link ] --->",
+            ["layout", "request link"],
+          ],
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: false,
         },
       ],
       [
-        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n  </body>\n</html>',
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n    \n    <!--- [ layout, request link ] --->\n  </body>\n</html>',
         {
           absPath: ["layout"],
           force: false,
           noChildContent: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
         },
       ],
     ])
@@ -172,8 +224,11 @@ describe("visitCommentModules", (it) => {
       </a>
       Force this.
     </p>
+    
+    <!--- [ layout, request link ] --->
   </body>
 </html>
+
     `.trim()
     )
 
@@ -224,9 +279,12 @@ describe("visitCommentModules", (it) => {
       Force this.	[ valid path, body ]
     </p>	[ valid path, end ]
     </p>	[ valid path, body ]
+    	[ valid path, body ]
+    <!--- [ layout, request link ] --->	[ ref, valid path, body ]
   </body>	[ valid path, end ]
   </body>	[ valid path, body ]
 </html>	[ valid path, body ]
+
     `.trim()
     )
   })
@@ -276,6 +334,12 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: true,
         },
       ],
@@ -284,6 +348,12 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "login link", "link"],
           force: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: false,
         },
       ],
@@ -298,6 +368,12 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "login link"],
           force: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
           noChildContent: false,
         },
       ],
@@ -307,6 +383,12 @@ describe("visitCommentModules", (it) => {
           absPath: ["layout"],
           force: false,
           noChildContent: false,
+          refs: [
+            [
+              "    <!--- [ layout, request link ] --->",
+              ["layout", "request link"],
+            ],
+          ],
         },
       ],
     ])
@@ -368,6 +450,8 @@ describe("visitCommentModules", (it) => {
       Force this.	[ body ]
     </p>	[ end ]
     </p>	[ body ]
+    	[ body ]
+    <!--- [ layout, request link ] --->	[ ref, body ]
   </body>	[ end ]
   </body>	[ body ]
 </html>	[ body ]
