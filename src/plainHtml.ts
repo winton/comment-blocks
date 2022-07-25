@@ -1,5 +1,4 @@
 import compareArrays from "helpers/compareArrays/compareArrays"
-import escapeRegExp from "helpers/escapeRegExp/escapeRegExp"
 import { CommentParams } from "helpers/parseComment/parseComment"
 import replaceParams from "helpers/replaceParams/replaceParams"
 import squashComments from "helpers/squashComments/squashComments"
@@ -15,27 +14,26 @@ export type Block = {
 export type Blocks = Block[]
 
 export function plainHtml(
-  path: [string, ...string[]],
+  path: string[],
   template: string,
   blocks: Blocks,
   options?: {
     debug?: boolean
+    ignoreRefs?: boolean
     params?: CommentParams
     stateLog?: string[]
     values?: Record<string, any>
   }
 ): string | undefined {
   const lines = squashComments(template).split("\n")
-  const refValues: Record<string, string> = {}
 
-  let out = visitCommentModules(
+  return visitCommentModules(
     lines,
     path,
     (html, lines, comment) => {
       const hasContent = !comment.noChildContent
 
       let valuesMemo: Record<string, any> = {}
-
       let hasMatch = false
 
       const blockMatches = blocks.reduce(
@@ -64,7 +62,7 @@ export function plainHtml(
               comment.absPath?.slice(0, blockPath.length)
             )
 
-          if (isParent) {
+          if (isParent || (isMatch && comment.ref)) {
             valuesMemo = {
               ...valuesMemo,
               ...block.values,
@@ -109,6 +107,15 @@ export function plainHtml(
         ...valuesMemo,
       }
 
+      if (comment.ref && !options?.ignoreRefs) {
+        return plainHtml(
+          comment.ref,
+          template,
+          [{ path: [], values }],
+          { ignoreRefs: true }
+        )
+      }
+
       const out = blockMatches.reduce((memo, block) => {
         if (
           block.isMatch ||
@@ -146,12 +153,17 @@ export function plainHtml(
 
           const finalHtml = finalLines.join("\n")
 
-          let paramCount = 0
+          let matchesAll = true
+          let noParams = true
 
           if (params) {
             for (const key in params) {
               if (!params[key].optional) {
-                paramCount++
+                noParams = false
+
+                if (!finalValues[key]) {
+                  matchesAll = false
+                }
               }
             }
           }
@@ -159,17 +171,18 @@ export function plainHtml(
           if (options?.debug) {
             console.debug([
               block.isMatch,
-              paramCount === 0,
+              matchesAll,
               finalHtml !== html,
               !hasMatch && comment.force,
             ])
           }
 
           if (
-            block.isMatch ||
-            paramCount === 0 ||
-            finalHtml !== html ||
-            (!hasMatch && comment.force)
+            matchesAll &&
+            (block.isMatch ||
+              noParams ||
+              finalHtml !== html ||
+              (!hasMatch && comment.force))
           ) {
             memo.push(finalHtml)
           }
@@ -193,28 +206,13 @@ export function plainHtml(
       }
 
       if (out.length) {
-        const finalOut = out.join("\n")
-
-        if (comment.refMatch) {
-          refValues[comment.refMatch] = finalOut
-        }
-
-        return finalOut
+        return out.join("\n")
       }
 
       return undefined
     },
     { stateLog: options?.stateLog }
   )
-
-  for (const line in refValues) {
-    out = out?.replace(
-      new RegExp("^" + escapeRegExp(line) + "$", "gm"),
-      refValues[line]
-    )
-  }
-
-  return out
 }
 
 export default plainHtml

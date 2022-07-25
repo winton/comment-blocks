@@ -32,11 +32,6 @@ export default ({
     states.push("empty")
   }
 
-  if (comment?.ref) {
-    comment = undefined
-    states.push("ref")
-  }
-
   if (!comment && !lastComment) {
     states.push("before comment")
   }

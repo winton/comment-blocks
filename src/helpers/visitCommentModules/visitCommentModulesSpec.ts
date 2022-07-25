@@ -56,12 +56,6 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: true,
         },
       ],
@@ -70,12 +64,6 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "login link", "link"],
           force: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: false,
         },
       ],
@@ -90,12 +78,6 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "login link"],
           force: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: false,
         },
       ],
@@ -115,12 +97,6 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: true,
         },
       ],
@@ -129,12 +105,6 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "request link", "link"],
           force: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: false,
         },
       ],
@@ -143,23 +113,17 @@ describe("visitCommentModules", (it) => {
         {
           params: {
             someVar: {
-              optional: false,
+              optional: true,
               value: "blah",
             },
           },
           absPath: ["layout", "request link", "force"],
           force: true,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: true,
         },
       ],
       [
-        '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n    \n    <!--- [ layout, request link ] --->',
+        '    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n    ',
         {
           params: {
             url: {
@@ -169,29 +133,25 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "request link"],
           force: false,
-          refMatch:
-            "    <!--- [ layout, request link ] --->",
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: false,
         },
       ],
       [
-        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n    \n    <!--- [ layout, request link ] --->\n  </body>\n</html>',
+        "",
+        {
+          params: {},
+          ref: ["layout", "request link"],
+          absPath: ["layout", "ref"],
+          force: false,
+          noChildContent: true,
+        },
+      ],
+      [
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml">\n  <head>\n    <meta\n      http-equiv="Content-Type"\n      content="text/html; charset=UTF-8"\n    />\n    <title></title>\n    <style></style>\n  </head>\n  <body>\n    <p style="font-size: 18px">\n      🌎&nbsp;\n      <a href="url">\n        Click here to access\n      </a>\n    </p>\n    <p>\n      This link self destructs after one minute.\n      <a href="url">\n        Request a new link.\n      </a>\n      Force this.\n    </p>\n    \n  </body>\n</html>',
         {
           absPath: ["layout"],
           force: false,
           noChildContent: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
         },
       ],
     ])
@@ -223,7 +183,6 @@ describe("visitCommentModules", (it) => {
       Force this.
     </p>
     
-    <!--- [ layout, request link ] --->
   </body>
 </html>
 
@@ -271,18 +230,19 @@ describe("visitCommentModules", (it) => {
         Request a new link.	[ valid path, body ]
       </a>	[ valid path, end ]
       </a>	[ valid path, body ]
-      <!--- force! | someVar: blah --->	[ valid path, end ]
-      <!--- force! | someVar: blah --->	[ valid path, inner comment ]
-      <!--- force! | someVar: blah --->	[ valid path, comment ]
+      <!--- force! | someVar?: blah --->	[ valid path, end ]
+      <!--- force! | someVar?: blah --->	[ valid path, inner comment ]
+      <!--- force! | someVar?: blah --->	[ valid path, comment ]
       Force this.	[ valid path, body ]
     </p>	[ valid path, end ]
     </p>	[ valid path, body ]
     	[ valid path, body ]
-    <!--- [ layout, request link ] --->	[ ref, valid path, body ]
+    <!--- [ layout, request link ] --->	[ valid path, end ]
+    <!--- [ layout, request link ] --->	[ valid path, inner comment ]
+    <!--- [ layout, request link ] --->	[ valid path, comment ]
   </body>	[ valid path, end ]
   </body>	[ valid path, body ]
 </html>	[ valid path, body ]
-
     `.trim()
     )
   })
@@ -332,12 +292,6 @@ describe("visitCommentModules", (it) => {
             "link text",
           ],
           force: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: true,
         },
       ],
@@ -346,12 +300,6 @@ describe("visitCommentModules", (it) => {
         {
           absPath: ["layout", "login link", "link"],
           force: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: false,
         },
       ],
@@ -366,12 +314,6 @@ describe("visitCommentModules", (it) => {
           },
           absPath: ["layout", "login link"],
           force: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
           noChildContent: false,
         },
       ],
@@ -381,12 +323,6 @@ describe("visitCommentModules", (it) => {
           absPath: ["layout"],
           force: false,
           noChildContent: false,
-          refs: [
-            [
-              "    <!--- [ layout, request link ] --->",
-              ["layout", "request link"],
-            ],
-          ],
         },
       ],
     ])
@@ -442,14 +378,16 @@ describe("visitCommentModules", (it) => {
         Request a new link.	[ body ]
       </a>	[ end ]
       </a>	[ body ]
-      <!--- force! | someVar: blah --->	[ end ]
-      <!--- force! | someVar: blah --->	[ inner comment ]
-      <!--- force! | someVar: blah --->	[ comment ]
+      <!--- force! | someVar?: blah --->	[ end ]
+      <!--- force! | someVar?: blah --->	[ inner comment ]
+      <!--- force! | someVar?: blah --->	[ comment ]
       Force this.	[ body ]
     </p>	[ end ]
     </p>	[ body ]
     	[ body ]
-    <!--- [ layout, request link ] --->	[ ref, body ]
+    <!--- [ layout, request link ] --->	[ end ]
+    <!--- [ layout, request link ] --->	[ inner comment ]
+    <!--- [ layout, request link ] --->	[ comment ]
   </body>	[ end ]
   </body>	[ body ]
 </html>	[ body ]

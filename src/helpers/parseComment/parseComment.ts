@@ -25,7 +25,7 @@ export default (line: string): Comment => {
     const ref = match[2]
       ? match[3].split(",").map((str) => str.trim())
       : undefined
-    const name = match[2] ? undefined : match[3].trim()
+    const name = match[2] ? "ref" : match[3].trim()
     const force = !match[2] && match[4] === "!"
     const rawParams = match[5]
 
