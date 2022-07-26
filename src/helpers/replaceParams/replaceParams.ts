@@ -10,16 +10,10 @@ export default (
 
   if (params) {
     for (const name in params) {
-      const { optional, value } = params[name]
+      const { value } = params[name]
 
-      if (values) {
-        if (values[name] && value === "this") {
-          newHtml = values[name]
-        }
-
-        if (values[name] === undefined && optional) {
-          values[name] = value
-        }
+      if (values && values[name] && value === "this") {
+        newHtml = values[name]
       }
     }
 
