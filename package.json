@@ -1,6 +1,6 @@
 {
   "name": "comment-blocks",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "",
   "type": "module",
   "main": "./build/server/commentBlocks.js",
