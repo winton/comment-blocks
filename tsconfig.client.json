@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["./src/plainHtml.ts"],
+  "include": ["./src/commentBlocks.ts"],
   "compilerOptions": {
     "noEmitHelpers": true,
     "module": "ES2020",
