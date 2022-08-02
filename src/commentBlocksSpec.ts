@@ -29,9 +29,10 @@ describe("commentIterator", (it) => {
     const output = commentIterator(html, indices)
 
     // console.warn(JSON.stringify(output))
+    // console.warn(output)
 
     expect(output).toBe(
-      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\n  \n    body3\nbody1.2\nbody4"
+      "body1\n  body2\n    body3\n  body2.2\n    body3\nbody1.2\nbody4"
     )
   })
 
@@ -43,7 +44,7 @@ describe("commentIterator", (it) => {
 
     // console.warn(JSON.stringify(output))
 
-    expect(output).toBe("")
+    expect(output).toBe(undefined)
   })
 
   it("one match", () => {
@@ -59,7 +60,7 @@ describe("commentIterator", (it) => {
 
     // console.warn(JSON.stringify(output))
 
-    expect(output).toBe("body2\n    \n  body2.2")
+    expect(output).toBe("body2\n  body2.2")
   })
 
   it("one match with cascading show", () => {
@@ -77,9 +78,7 @@ describe("commentIterator", (it) => {
 
     // console.warn(JSON.stringify(output))
 
-    expect(output).toBe(
-      "body2\n    \n    body3\n\n  body2.2"
-    )
+    expect(output).toBe("body2\n    body3\n  body2.2")
   })
 
   it("two root matches", () => {
@@ -95,7 +94,7 @@ describe("commentIterator", (it) => {
 
     // console.warn(JSON.stringify(output))
 
-    expect(output).toBe("body1\n  \n  \nbody1.2\nbody4")
+    expect(output).toBe("body1\nbody1.2\nbody4")
   })
 
   it("two root matches with cascading show", () => {
@@ -112,9 +111,10 @@ describe("commentIterator", (it) => {
     })
 
     // console.warn(JSON.stringify(output))
+    // console.warn(output)
 
     expect(output).toBe(
-      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\n  \n    body3\nbody1.2\nbody4"
+      "body1\n  body2\n    body3\n  body2.2\n    body3\nbody1.2\nbody4"
     )
   })
 
@@ -133,7 +133,7 @@ describe("commentIterator", (it) => {
     // console.warn(output)
 
     expect(output).toBe(
-      "body2\n    \n    body3\n\n    body3\n\n  body2.2\n  body2\n    \n    body3\n\n    body3\n\n  body2.2\n    body3\n\n    body3\n    body3\n\n    body3"
+      "body2\n    body3\n    body3\n  body2.2\n  body2\n    body3\n    body3\n  body2.2\n    body3\n    body3\n    body3\n    body3"
     )
   })
 })

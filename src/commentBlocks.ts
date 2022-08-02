@@ -207,7 +207,13 @@ export function commentIterator(
     }
   }
 
-  return strings.join("\n").trim()
+  const out = strings
+    .map((str) => str.trimEnd())
+    .filter((str) => str.length)
+    .join("\n")
+    .trim()
+
+  return out.length ? out : undefined
 }
 
 export function commentIndices(
