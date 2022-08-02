@@ -5,9 +5,7 @@
 ## Install
 
 ```bash
-git clone git@github.com:winton/comment-blocks.git
-cd comment-blocks
-npm install
+npm install comment-blocks
 ```
 
 ## Watch
