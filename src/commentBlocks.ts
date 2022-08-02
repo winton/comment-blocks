@@ -226,15 +226,15 @@ export function commentIndices(
   str: string,
   options: CommentBlockIndicesOptions = {}
 ): CommentBlockIndices[] {
-  const {
-    commentStart,
-    commentEnd,
-    modTrigger,
-    refTrigger,
-  } = {
+  const $ = {
     ...defaultIndicesOptions,
     ...options,
   } as Required<CommentBlockIndicesOptions>
+
+  const commentStart = escapeRegex($.commentStart)
+  const commentEnd = escapeRegex($.commentEnd)
+  const modTrigger = escapeRegex($.modTrigger)
+  const refTrigger = escapeRegex($.refTrigger)
 
   const commentRegex = new RegExp(
     `^(\\s*)${commentStart}\\s*(${modTrigger}|${refTrigger})(.*?)${commentEnd}\\s*\\n(\\s*)`,
@@ -249,15 +249,15 @@ export function commentIndices(
     const searchStr =
       result[4] + str.slice(commentRegex.lastIndex)
 
+    const isRef = result[2] === $.refTrigger
+
     const endIndex = searchStr.search(
       new RegExp(
         `^(\\s{0,${
-          result[2] === refTrigger
-            ? ""
-            : result[4].length - 1
+          isRef ? "" : result[4].length - 1
         }}[^\\s]|\\s{0,${
           result[4].length
-        }}<!--\\s*(${modTrigger}|${refTrigger}))`,
+        }}${commentStart}\\s*(${modTrigger}|${refTrigger}))`,
         "gms"
       )
     )
@@ -280,10 +280,7 @@ export function commentIndices(
       results.push({
         moduleName: match[1].trim(),
         params,
-        indent:
-          result[2] === refTrigger
-            ? result[1].length
-            : result[4].length,
+        indent: isRef ? result[1].length : result[4].length,
         startCommentIndex:
           commentRegex.lastIndex -
           result[0].length +
@@ -293,9 +290,7 @@ export function commentIndices(
           commentRegex.lastIndex +
           (endIndex === -1 ? searchStr.length : endIndex) -
           result[4].length,
-        trigger: (result[2] === refTrigger
-          ? "ref"
-          : "mod") as "ref" | "mod",
+        trigger: (isRef ? "ref" : "mod") as "ref" | "mod",
       })
     }
   }
