@@ -80,7 +80,10 @@ export function commentIterator(
     ...options.callbacks,
   } as Required<CommentBlockCallbackOptions>
 
-  const og = options?.originals || { src, indices }
+  const og = {
+    ...{ src, indices },
+    ...options.originals,
+  } as Required<CommentBlockOriginalsOptions>
 
   if (indices.length === 0 && $.show) {
     return cb.process(src, $)
