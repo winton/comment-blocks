@@ -86,23 +86,17 @@ export function commentIterator(
     return cb.process(src, $)
   }
 
-  const minIndent = Math.min(
-    ...indices.map(({ indent }) => indent)
+  const sortedIndices = indices.sort(
+    (a, b) => a.startCommentIndex - b.startCommentIndex
   )
-
-  const minIndentMatches = indices.filter(
-    ({ indent }) => indent === minIndent
-  )
-
-  if (!minIndentMatches.length && $.show) {
-    return cb.process(src, $)
-  }
 
   const strings = []
 
+  let processedIndices: CommentBlockIndices[] = []
+
   let index = -1
 
-  for (const module of minIndentMatches) {
+  for (const module of sortedIndices) {
     index++
 
     if (index === 0 && $.show) {
@@ -114,95 +108,104 @@ export function commentIterator(
       )
     }
 
-    const matches = cb.match(module, $)
+    if (!processedIndices.includes(module)) {
+      const matches = cb.match(module, $)
 
-    if (module.trigger === "ref" && matches?.length) {
-      const refModule = og.indices.find(
-        ({ moduleName }) => module.moduleName === moduleName
-      )
+      if (module.trigger === "ref" && matches?.length) {
+        const refModule = og.indices.find(
+          ({ moduleName }) =>
+            module.moduleName === moduleName
+        )
 
-      if (refModule) {
-        for (const match of matches) {
-          const out = commentIterator(
-            og.src.slice(
-              refModule.startBodyIndex,
-              refModule.endIndex
-            ),
-            offsetIndices(
-              og.indices.filter(
-                ({ startCommentIndex, endIndex }) =>
-                  startCommentIndex >=
-                    refModule.startCommentIndex &&
-                  endIndex <= refModule.endIndex
+        if (refModule) {
+          for (const match of matches) {
+            const out = commentIterator(
+              og.src.slice(
+                refModule.startBodyIndex,
+                refModule.endIndex
               ),
-              refModule.startBodyIndex
-            ),
-            {
-              callbacks: cb,
-              iterator: {
-                ...match,
-                memo: { ...$.memo, ...match?.memo },
-              },
-              originals: og,
-            }
-          )
+              offsetIndices(
+                og.indices.filter(
+                  ({ startCommentIndex, endIndex }) =>
+                    startCommentIndex >=
+                      refModule.startCommentIndex &&
+                    endIndex <= refModule.endIndex
+                ),
+                refModule.startBodyIndex
+              ),
+              {
+                callbacks: cb,
+                iterator: {
+                  ...match,
+                  memo: { ...$.memo, ...match?.memo },
+                },
+                originals: og,
+              }
+            )
 
-          if (out) {
-            strings.push(" ".repeat(refModule.indent) + out)
+            if (out) {
+              strings.push(
+                " ".repeat(refModule.indent) + out
+              )
+            }
           }
         }
       }
-    }
 
-    if (module.trigger === "mod") {
-      const body = src.slice(
-        module.startBodyIndex,
-        module.endIndex
-      )
+      if (module.trigger === "mod") {
+        const body = src.slice(
+          module.startBodyIndex,
+          module.endIndex
+        )
 
-      const children = offsetIndices(
-        indices.filter(
-          ({ indent, startCommentIndex, endIndex }) =>
-            indent >= module.indent &&
+        const childMatches = indices.filter(
+          ({ startCommentIndex, endIndex }) =>
             module.startBodyIndex < startCommentIndex &&
             module.endIndex > endIndex
-        ),
-        module.startBodyIndex
-      )
+        )
 
-      for (const match of matches || [undefined]) {
-        const out = commentIterator(body, children, {
-          callbacks: cb,
-          iterator: {
-            ...match,
-            memo: { ...$.memo, ...match?.memo },
-          },
-          originals: og,
-        })
+        processedIndices =
+          processedIndices.concat(childMatches)
 
-        if (out) {
-          strings.push(" ".repeat(module.indent) + out)
+        const children = offsetIndices(
+          childMatches,
+          module.startBodyIndex
+        )
+
+        for (const match of matches || [undefined]) {
+          const out = commentIterator(body, children, {
+            callbacks: cb,
+            iterator: {
+              ...match,
+              memo: { ...$.memo, ...match?.memo },
+            },
+            originals: og,
+          })
+
+          if (out) {
+            strings.push(" ".repeat(module.indent) + out)
+          }
         }
       }
-    }
 
-    const nextModule = minIndentMatches[index + 1]
+      const nextModule = sortedIndices[index + 1]
 
-    if ($.show) {
-      if (nextModule) {
-        strings.push(
-          cb.process(
-            src.slice(
-              module.endIndex,
-              nextModule.startCommentIndex
-            ),
-            $
+      if ($.show) {
+        if (nextModule) {
+          strings.push(
+            cb.process(
+              src.slice(
+                module.endIndex,
+                nextModule.startCommentIndex
+              ),
+              $
+            )
           )
-        )
-      } else {
-        strings.push(
-          cb.process(src.slice(module.endIndex, -1), $)
-        )
+        } else {
+          strings.push(
+            cb.process(src.slice(module.endIndex, -1), $)
+          )
+        }
       }
     }
   }
@@ -309,6 +312,62 @@ export function offsetIndices(
       startCommentIndex: module.startCommentIndex - offset,
     })
   )
+}
+
+export function replaceParams(
+  str: string,
+  {
+    params,
+    values,
+  }: {
+    params?: Record<string, string>
+    values?: Record<string, string>
+  }
+): string {
+  let newStr = str
+
+  if (params) {
+    for (const name in params) {
+      const value = params[name]
+
+      if (values && values[name] && value === "this") {
+        newStr = values[name]
+      }
+    }
+
+    for (const name in params) {
+      const value = params[name]
+
+      if (values && values[name] !== undefined) {
+        const replaceKey = `$!-!-${name}-!-!$`
+        const regex = new RegExp(escapeRegex(value), "g")
+        newStr = newStr.replace(regex, replaceKey)
+      }
+    }
+
+    for (const name in params) {
+      if (values && values[name] !== undefined) {
+        const replaceKey = `$!-!-${name}-!-!$`
+        const regex = new RegExp(
+          escapeRegex(replaceKey),
+          "g"
+        )
+
+        if (values[name] !== undefined) {
+          newStr = newStr.replace(
+            regex,
+            values[name].toString()
+          )
+        }
+      }
+    }
+  }
+
+  return newStr
+}
+
+export function escapeRegex(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
 export default (
