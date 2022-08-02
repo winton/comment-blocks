@@ -7,9 +7,12 @@ import {
 
 const html = `
 asd
-<!-- mod: mod1, key1: val -->
+<!--
+  mod: mod1
+  key1: val
+-->
 body1
-  <!-- mod: mod2, key2: val -->
+  <!-- mod: mod2\n key2: val -->
   body2
     <!--
       mod: mod3
@@ -19,7 +22,8 @@ body1
   body2.2
   <!-- ref: mod3 -->
 body1.2
-<!-- mod: mod4, key4: val -->
+<!-- mod: mod4
+key4: val -->
 body4
 `
 

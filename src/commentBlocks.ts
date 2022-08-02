@@ -1,7 +1,12 @@
+export interface CommentBlockIteratorParams {
+  optional: boolean
+  value: string
+}
+
 export interface CommentBlockIteratorOptions {
   show?: boolean
   memo?: Record<string, any>
-  params?: Record<string, string>
+  params?: Record<string, CommentBlockIteratorParams>
   values?: Record<string, string>
 }
 
@@ -32,7 +37,7 @@ export interface CommentBlockIndicesOptions {
 export interface CommentBlockIndices {
   trigger: "mod" | "ref"
   moduleName: string
-  params: Record<string, string>
+  params: Record<string, CommentBlockIteratorParams>
   indent: number
   startCommentIndex: number
   startBodyIndex: number
@@ -145,10 +150,7 @@ export function commentIterator(
               ),
               {
                 callbacks: cb,
-                iterator: {
-                  ...match,
-                  memo: { ...$.memo, ...match?.memo },
-                },
+                iterator: match,
                 originals: og,
               }
             )
@@ -168,26 +170,30 @@ export function commentIterator(
           module.endIndex
         )
 
-        const childMatches = indices.filter(
+        const childIndices = indices.filter(
           ({ startCommentIndex, endIndex }) =>
             module.startBodyIndex < startCommentIndex &&
             module.endIndex > endIndex
         )
 
         processedIndices =
-          processedIndices.concat(childMatches)
+          processedIndices.concat(childIndices)
 
-        const children = offsetIndices(
-          childMatches,
+        const offsetChildIndices = offsetIndices(
+          childIndices,
           module.startBodyIndex
         )
 
         for (const match of matches || [undefined]) {
-          const out = commentIterator(body, children, {
-            callbacks: cb,
-            iterator: match,
-            originals: og,
-          })
+          const out = commentIterator(
+            body,
+            offsetChildIndices,
+            {
+              callbacks: cb,
+              iterator: match,
+              originals: og,
+            }
+          )
 
           if (out) {
             strings.push(" ".repeat(module.indent) + out)
@@ -273,19 +279,25 @@ export function commentIndices(
     )
 
     const commentBody = result[3].trim()
-    const match = commentBody.match(/^([^,\n]+)(.*)/)
+    const match = commentBody.match(/([^\n]+)(.*)/s)
 
     if (match) {
       const params = match[2]
-        .trim()
-        .split(/\s*[,\n]\s*/)
-        .map((piece) => piece.split(/\s*:\s*/))
-        .reduce((memo, [key, value]) => {
-          if (key !== "") {
-            memo[key] = value || ""
+        .split(/\n/)
+        .map((piece) =>
+          piece.match(/\s*([^?:]+)(\??):\s*(.*)\s*/)
+        )
+        .reduce((memo, result) => {
+          if (result) {
+            const [, key, optional, value] = result
+
+            memo[key] = {
+              value,
+              optional: optional === "?",
+            }
           }
           return memo
-        }, {} as Record<string, string>)
+        }, {} as Record<string, CommentBlockIteratorParams>)
 
       results.push({
         moduleName: match[1].trim(),
@@ -328,43 +340,53 @@ export function replaceParams(
     params,
     values,
   }: {
-    params?: Record<string, string>
+    params?: Record<string, CommentBlockIteratorParams>
     values?: Record<string, string>
   }
-): string {
-  let newStr = str
+): string | undefined {
+  let newStr: string | undefined = str
 
   if (params) {
-    for (const name in params) {
-      const value = params[name]
+    for (const key in params) {
+      const { optional, value } = params[key]
 
-      if (values && values[name] && value === "this") {
-        newStr = values[name]
+      if (values && values[key] && value === "this") {
+        newStr = values[key]
+        continue
+      }
+
+      if (values && !optional && !values[key]) {
+        newStr = undefined
+        continue
       }
     }
 
-    for (const name in params) {
-      const value = params[name]
+    if (newStr || newStr === undefined) {
+      return newStr
+    }
 
-      if (values && values[name] !== undefined) {
-        const replaceKey = `$!-!-${name}-!-!$`
+    for (const key in params) {
+      const { value } = params[key]
+
+      if (values && values[key] !== undefined) {
+        const replaceKey = `$!-!-${key}-!-!$`
         const regex = new RegExp(escapeRegex(value), "g")
         newStr = newStr.replace(regex, replaceKey)
       }
     }
 
-    for (const name in params) {
-      if (values && values[name] !== undefined) {
-        const replaceKey = `$!-!-${name}-!-!$`
+    for (const key in params) {
+      if (values && values[key] !== undefined) {
+        const replaceKey = `$!-!-${key}-!-!$`
         const regex = new RegExp(
           escapeRegex(replaceKey),
           "g"
         )
 
-        if (values[name] !== undefined) {
+        if (values[key] !== undefined) {
           newStr = newStr.replace(
             regex,
-            values[name].toString()
+            values[key].toString()
           )
         }
       }
