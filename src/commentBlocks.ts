@@ -1,5 +1,6 @@
 export interface CommentBlockIteratorOptions {
   show?: boolean
+  memo?: Record<string, any>
   params?: Record<string, string>
   values?: Record<string, string>
 }
@@ -42,6 +43,7 @@ export const defaultCallbackOptions: Required<CommentBlockCallbackOptions> =
 export const defaultIteratorOptions: Required<CommentBlockIteratorOptions> =
   {
     show: false,
+    memo: {},
     params: {},
     values: {},
   }
@@ -145,7 +147,10 @@ export function commentIterator(
       for (const match of matches || [undefined]) {
         const out = commentIterator(body, children, {
           callbacks: cb,
-          iterator: match,
+          iterator: {
+            ...match,
+            memo: { ...$.memo, ...match?.memo },
+          },
         })
 
         if (out) {
