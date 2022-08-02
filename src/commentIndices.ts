@@ -29,7 +29,7 @@ export default (
     commentTypes[$.commentType]
 
   const commentRegex = new RegExp(
-    `${commentStart}\\s*mod: (.*?)${commentEnd}\\s*\\n(\\s*)`,
+    `${commentStart}\\s*${$.moduleNameKey}: (.*?)${commentEnd}\\s*\\n(\\s*)`,
     "gms"
   )
 
@@ -44,7 +44,7 @@ export default (
       new RegExp(
         `^(\\s{0,${result[2].length - 1}}[^\\s]|\\s{0,${
           result[2].length
-        }}<!--\\s*mod:\\s)`,
+        }}<!--\\s*${$.moduleNameKey}:\\s)`,
         "gms"
       )
     )
