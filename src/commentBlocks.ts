@@ -37,7 +37,7 @@ export const defaultOptions: Required<CommentBlockOptions> =
 export const commentIterator = (
   src: string,
   indices: CommentIndicesResult[],
-  callbacks: CommentBlockCallbacks,
+  callbacks: CommentBlockCallbacks = {},
   options: CommentBlockOptions = {}
 ): string | undefined => {
   const $ = {

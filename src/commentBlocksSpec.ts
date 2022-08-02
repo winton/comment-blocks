@@ -23,9 +23,7 @@ body4
 describe("commentIterator", (it) => {
   it("matches all", () => {
     const indices = commentIndices(html)
-    const output = commentIterator(html, indices, {
-      match: () => [{ show: true }],
-    })
+    const output = commentIterator(html, indices)
 
     // console.warn(JSON.stringify(output))
 
