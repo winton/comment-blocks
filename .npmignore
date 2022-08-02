@@ -3,6 +3,7 @@
 /.prettierrc
 /.mocharc.json
 /.vscode
-/fixtures
+/build/server/harnessSpec.*
+/fixture
 /src
 /tsconfig.*
