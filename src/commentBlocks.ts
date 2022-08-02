@@ -1,5 +1,3 @@
-import { CommentIndicesResult } from "commentIndices"
-
 export interface CommentBlockOptions {
   show?: boolean
   params?: Record<string, string>
@@ -21,6 +19,14 @@ export interface CommentBlockCallbacks {
   ) => string
 }
 
+export interface CommentBlockIndices {
+  commentBody: string
+  indent: number
+  startCommentIndex: number
+  startBodyIndex: number
+  endIndex: number
+}
+
 export const defaultCallbacks: Required<CommentBlockCallbacks> =
   {
     process: (str) => str,
@@ -34,12 +40,12 @@ export const defaultOptions: Required<CommentBlockOptions> =
     values: {},
   }
 
-export const commentIterator = (
+export function commentIterator(
   src: string,
-  indices: CommentIndicesResult[],
+  indices: CommentBlockIndices[],
   callbacks: CommentBlockCallbacks = {},
   options: CommentBlockOptions = {}
-): string | undefined => {
+): string | undefined {
   const $ = {
     ...defaultOptions,
     ...options,
@@ -115,7 +121,7 @@ export const commentIterator = (
           module.endIndex > endIndex
       )
       .map(
-        (module): CommentIndicesResult => ({
+        (module): CommentBlockIndices => ({
           ...module,
           endIndex: module.endIndex - offset,
           startBodyIndex: module.startBodyIndex - offset,
@@ -156,4 +162,56 @@ export const commentIterator = (
   return strings.join("\n").trim()
 }
 
-export default commentIterator
+export function commentIndices(
+  str: string,
+  commentStart = "<!--",
+  commentEnd = "-->",
+  nameKey = "mod"
+): CommentBlockIndices[] {
+  const commentRegex = new RegExp(
+    `${commentStart}\\s*${nameKey}: (.*?)${commentEnd}\\s*\\n(\\s*)`,
+    "gms"
+  )
+
+  const results = []
+  let result
+
+  while ((result = commentRegex.exec(str)) !== null) {
+    const searchStr =
+      result[2] + str.slice(commentRegex.lastIndex)
+
+    const endIndex = searchStr.search(
+      new RegExp(
+        `^(\\s{0,${result[2].length - 1}}[^\\s]|\\s{0,${
+          result[2].length
+        }}<!--\\s*${nameKey}:\\s)`,
+        "gms"
+      )
+    )
+
+    results.push({
+      commentBody: result[1].trim(),
+      indent: result[2].length,
+      startCommentIndex:
+        commentRegex.lastIndex - result[0].length,
+      startBodyIndex: commentRegex.lastIndex,
+      endIndex:
+        commentRegex.lastIndex +
+        (endIndex === -1 ? searchStr.length : endIndex) -
+        result[2].length,
+    })
+  }
+
+  return results
+}
+
+export default (
+  str: string,
+  callbacks: CommentBlockCallbacks
+) => {
+  return commentIterator(
+    str,
+    commentIndices(str),
+    callbacks
+  )
+}

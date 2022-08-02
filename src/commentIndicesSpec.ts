@@ -1,5 +1,5 @@
 import { expect } from "expect"
-import commentIndices from "commentIndices"
+import { commentIndices } from "commentBlocks"
 import describe from "vendor/tests/describe/describe"
 
 const html = `
@@ -18,7 +18,7 @@ body4
 `
 
 describe("commentIndices", (it) => {
-  it("renders", () => {
+  it("builds indices", () => {
     const indices = commentIndices(html)
     expect(indices).toEqual([
       {

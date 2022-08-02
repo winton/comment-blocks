@@ -1,7 +1,9 @@
 import { expect } from "expect"
-import commentIndices from "commentIndices"
 import describe from "vendor/tests/describe/describe"
-import commentIterator from "commentBlocks"
+import {
+  commentIterator,
+  commentIndices,
+} from "commentBlocks"
 
 const html = `
 asd
