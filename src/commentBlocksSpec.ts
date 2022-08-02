@@ -38,7 +38,7 @@ describe("commentIterator", (it) => {
   it("no matches", () => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
-      match: () => undefined,
+      callbacks: { match: () => undefined },
     })
 
     // console.warn(JSON.stringify(output))
@@ -49,10 +49,12 @@ describe("commentIterator", (it) => {
   it("one match", () => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
-      match: ({ moduleName }) =>
-        moduleName === "mod2"
-          ? [{ show: true }]
-          : undefined,
+      callbacks: {
+        match: ({ moduleName }) =>
+          moduleName === "mod2"
+            ? [{ show: true }]
+            : undefined,
+      },
     })
 
     // console.warn(JSON.stringify(output))
@@ -63,12 +65,14 @@ describe("commentIterator", (it) => {
   it("one match with cascading show", () => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
-      match: ({ moduleName }, { show }) =>
-        moduleName === "mod2"
-          ? [{ show: true }]
-          : show
-          ? [{ show: true }]
-          : undefined,
+      callbacks: {
+        match: ({ moduleName }, { show }) =>
+          moduleName === "mod2"
+            ? [{ show: true }]
+            : show
+            ? [{ show: true }]
+            : undefined,
+      },
     })
 
     // console.warn(JSON.stringify(output))
@@ -81,10 +85,12 @@ describe("commentIterator", (it) => {
   it("two root matches", () => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
-      match: ({ moduleName }) =>
-        moduleName === "mod1" || moduleName === "mod4"
-          ? [{ show: true }]
-          : undefined,
+      callbacks: {
+        match: ({ moduleName }) =>
+          moduleName === "mod1" || moduleName === "mod4"
+            ? [{ show: true }]
+            : undefined,
+      },
     })
 
     // console.warn(JSON.stringify(output))
@@ -95,12 +101,14 @@ describe("commentIterator", (it) => {
   it("two root matches with cascading show", () => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
-      match: ({ moduleName }, { show }) =>
-        moduleName === "mod1" || moduleName === "mod4"
-          ? [{ show: true }]
-          : show
-          ? [{ show: true }]
-          : undefined,
+      callbacks: {
+        match: ({ moduleName }, { show }) =>
+          moduleName === "mod1" || moduleName === "mod4"
+            ? [{ show: true }]
+            : show
+            ? [{ show: true }]
+            : undefined,
+      },
     })
 
     // console.warn(JSON.stringify(output))
@@ -113,10 +121,12 @@ describe("commentIterator", (it) => {
   it("multiple matches, same module", () => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
-      match: ({ moduleName }) =>
-        moduleName === "mod2" || moduleName === "mod3"
-          ? [{ show: true }, { show: true }]
-          : undefined,
+      callbacks: {
+        match: ({ moduleName }) =>
+          moduleName === "mod2" || moduleName === "mod3"
+            ? [{ show: true }, { show: true }]
+            : undefined,
+      },
     })
 
     // console.warn(JSON.stringify(output))
