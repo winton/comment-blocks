@@ -161,7 +161,7 @@ export function plainHtml(
               if (!params[key].optional) {
                 noParams = false
 
-                if (!finalValues[key]) {
+                if (finalValues[key] === undefined) {
                   matchesAll = false
                 }
               }
