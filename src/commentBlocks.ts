@@ -124,6 +124,8 @@ export function commentIterator(
     if (!processedIndices.includes(module)) {
       lastProcessed = module
 
+      validateParamsMerge(module, $)
+
       const matches = cb.match(module, $)
 
       if (module.trigger === "ref" && matches?.length) {
@@ -361,7 +363,7 @@ export function replaceParams(
       }
     }
 
-    if (newStr || newStr === undefined) {
+    if (newStr !== str || newStr === undefined) {
       return newStr
     }
 
@@ -398,6 +400,24 @@ export function replaceParams(
 
 export function escapeRegex(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+export function validateParamsMerge(
+  module?: CommentBlockIndices,
+  iterator?: CommentBlockIteratorOptions
+) {
+  if (iterator?.params && module?.params) {
+    for (const key in iterator.params) {
+      if (
+        !iterator.params[key]?.optional &&
+        module.params[key]?.optional
+      ) {
+        throw new Error(
+          `Block "${module.moduleName}" cannot have optional variable "${key}" because the variable is already required in a parent block.`
+        )
+      }
+    }
+  }
 }
 
 export default (
