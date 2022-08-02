@@ -1,7 +1,7 @@
 import { expect } from "expect"
 import commentIndices from "commentIndices"
 import describe from "vendor/tests/describe/describe"
-import commentIterator from "commentIterator"
+import commentIterator from "commentBlocks"
 
 const html = `
 asd
@@ -23,9 +23,9 @@ body4
 describe("commentIterator", (it) => {
   it("matches all", () => {
     const indices = commentIndices(html)
-    const output = commentIterator(html, indices, () => [
-      { force: true },
-    ])
+    const output = commentIterator(html, indices, {
+      match: () => [{ show: true }],
+    })
 
     // console.warn(JSON.stringify(output))
 
@@ -36,11 +36,9 @@ describe("commentIterator", (it) => {
 
   it("no matches", () => {
     const indices = commentIndices(html)
-    const output = commentIterator(
-      html,
-      indices,
-      () => undefined
-    )
+    const output = commentIterator(html, indices, {
+      match: () => undefined,
+    })
 
     // console.warn(JSON.stringify(output))
 
@@ -49,32 +47,28 @@ describe("commentIterator", (it) => {
 
   it("one match", () => {
     const indices = commentIndices(html)
-    const output = commentIterator(
-      html,
-      indices,
-      (moduleName) =>
+    const output = commentIterator(html, indices, {
+      match: ({ moduleName }) =>
         moduleName === "mod2"
-          ? [{ force: true }]
-          : undefined
-    )
+          ? [{ show: true }]
+          : undefined,
+    })
 
     // console.warn(JSON.stringify(output))
 
     expect(output).toBe("body2\n    \n  body2.2")
   })
 
-  it("one match with cascading force", () => {
+  it("one match with cascading show", () => {
     const indices = commentIndices(html)
-    const output = commentIterator(
-      html,
-      indices,
-      (moduleName, params, options) =>
+    const output = commentIterator(html, indices, {
+      match: ({ moduleName }, { show }) =>
         moduleName === "mod2"
-          ? [{ force: true }]
-          : options.force
-          ? [{ force: true }]
-          : undefined
-    )
+          ? [{ show: true }]
+          : show
+          ? [{ show: true }]
+          : undefined,
+    })
 
     // console.warn(JSON.stringify(output))
 
@@ -85,32 +79,28 @@ describe("commentIterator", (it) => {
 
   it("two root matches", () => {
     const indices = commentIndices(html)
-    const output = commentIterator(
-      html,
-      indices,
-      (moduleName) =>
+    const output = commentIterator(html, indices, {
+      match: ({ moduleName }) =>
         moduleName === "mod1" || moduleName === "mod4"
-          ? [{ force: true }]
-          : undefined
-    )
+          ? [{ show: true }]
+          : undefined,
+    })
 
     // console.warn(JSON.stringify(output))
 
     expect(output).toBe("body1\n  \nbody1.2\nbody4")
   })
 
-  it("two root matches with cascading force", () => {
+  it("two root matches with cascading show", () => {
     const indices = commentIndices(html)
-    const output = commentIterator(
-      html,
-      indices,
-      (moduleName, params, options) =>
+    const output = commentIterator(html, indices, {
+      match: ({ moduleName }, { show }) =>
         moduleName === "mod1" || moduleName === "mod4"
-          ? [{ force: true }]
-          : options.force
-          ? [{ force: true }]
-          : undefined
-    )
+          ? [{ show: true }]
+          : show
+          ? [{ show: true }]
+          : undefined,
+    })
 
     // console.warn(JSON.stringify(output))
 
@@ -121,14 +111,12 @@ describe("commentIterator", (it) => {
 
   it("multiple matches, same module", () => {
     const indices = commentIndices(html)
-    const output = commentIterator(
-      html,
-      indices,
-      (moduleName, params, options) =>
+    const output = commentIterator(html, indices, {
+      match: ({ moduleName }) =>
         moduleName === "mod2" || moduleName === "mod3"
-          ? [{ force: true }, { force: true }]
-          : undefined
-    )
+          ? [{ show: true }, { show: true }]
+          : undefined,
+    })
 
     // console.warn(JSON.stringify(output))
 

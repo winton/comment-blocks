@@ -1,12 +1,12 @@
-# plain-html
+# comment-blocks
 
-🚂 Templating engine powered by plain HTML
+🧱 Indentation-aware comment block visitor
 
 ## Install
 
 ```bash
-git clone git@github.com:winton/plain-html.git
-cd plain-html
+git clone git@github.com:winton/comment-blocks.git
+cd comment-blocks
 npm install
 ```
 

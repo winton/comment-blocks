@@ -1,31 +1,57 @@
 import { CommentIndicesResult } from "commentIndices"
-import replaceParams from "replaceParams"
 
-export interface CommentIteratorOptions {
-  force?: boolean
+export interface CommentBlockOptions {
+  show?: boolean
   params?: Record<string, string>
   values?: Record<string, string>
 }
 
-export const commentIterator2 = (
-  src: string,
-  indices: CommentIndicesResult[],
-  matchValuesCallback: (
-    moduleName: string,
-    params: Record<string, string>,
-    options: CommentIteratorOptions
-  ) => CommentIteratorOptions[] | undefined,
-  options: CommentIteratorOptions = {}
-): string | undefined => {
-  const $ = {
-    force: false,
+export interface CommentBlockCallbacks {
+  match?: (
+    comment: {
+      moduleName: string
+      params: Record<string, string>
+    },
+    options: CommentBlockOptions
+  ) => CommentBlockOptions[] | undefined
+
+  process?: (
+    str: string,
+    options: CommentBlockOptions
+  ) => string
+}
+
+export const defaultCallbacks: Required<CommentBlockCallbacks> =
+  {
+    process: (str) => str,
+    match: () => [{ show: true }],
+  }
+
+export const defaultOptions: Required<CommentBlockOptions> =
+  {
+    show: false,
     params: {},
     values: {},
-    ...options,
-  } as Required<typeof options>
+  }
 
-  if (indices.length === 0 && $.force) {
-    return replaceParams(src, $.params, $.values)
+export const commentIterator = (
+  src: string,
+  indices: CommentIndicesResult[],
+  callbacks: CommentBlockCallbacks,
+  options: CommentBlockOptions = {}
+): string | undefined => {
+  const $ = {
+    ...defaultOptions,
+    ...options,
+  } as Required<CommentBlockOptions>
+
+  const cb = {
+    ...defaultCallbacks,
+    ...callbacks,
+  } as Required<CommentBlockCallbacks>
+
+  if (indices.length === 0 && $.show) {
+    return cb.process(src, $)
   }
 
   const minIndent = Math.min(
@@ -36,8 +62,8 @@ export const commentIterator2 = (
     ({ indent }) => indent === minIndent
   )
 
-  if (!minIndentMatches.length && $.force) {
-    return replaceParams(src, $.params, $.values)
+  if (!minIndentMatches.length && $.show) {
+    return cb.process(src, $)
   }
 
   const strings = []
@@ -47,12 +73,11 @@ export const commentIterator2 = (
   for (const module of minIndentMatches) {
     index++
 
-    if (index === 0 && $.force) {
+    if (index === 0 && $.show) {
       strings.push(
-        replaceParams(
+        cb.process(
           src.slice(0, module.startCommentIndex),
-          $.params,
-          $.values
+          $
         )
       )
     }
@@ -73,16 +98,13 @@ export const commentIterator2 = (
         return memo
       }, {} as Record<string, string>)
 
-    const matches = matchValuesCallback(
-      moduleName,
-      params,
-      $
-    )
+    const matches = cb.match({ moduleName, params }, $)
 
     const body = src.slice(
       module.startBodyIndex,
       module.endIndex
     )
+
     const offset = module.startBodyIndex
 
     const children = indices
@@ -102,25 +124,9 @@ export const commentIterator2 = (
         })
       )
 
-    if (matches?.length) {
-      for (const match of matches) {
-        const out = commentIterator2(
-          body,
-          children,
-          matchValuesCallback,
-          match
-        )
-        if (out) {
-          strings.push(" ".repeat(module.indent) + out)
-        }
-      }
-    } else {
-      const out = commentIterator2(
-        body,
-        children,
-        matchValuesCallback,
-        {}
-      )
+    for (const match of matches || [undefined]) {
+      const out = commentIterator(body, children, cb, match)
+
       if (out) {
         strings.push(" ".repeat(module.indent) + out)
       }
@@ -128,25 +134,20 @@ export const commentIterator2 = (
 
     const nextModule = minIndentMatches[index + 1]
 
-    if (options.force) {
+    if (options.show) {
       if (nextModule) {
         strings.push(
-          replaceParams(
+          cb.process(
             src.slice(
               module.endIndex,
               nextModule.startCommentIndex
             ),
-            $.params,
-            $.values
+            $
           )
         )
       } else {
         strings.push(
-          replaceParams(
-            src.slice(module.endIndex, -1),
-            $.params,
-            $.values
-          )
+          cb.process(src.slice(module.endIndex, -1), $)
         )
       }
     }
@@ -155,4 +156,4 @@ export const commentIterator2 = (
   return strings.join("\n").trim()
 }
 
-export default commentIterator2
+export default commentIterator
