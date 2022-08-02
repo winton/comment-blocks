@@ -97,10 +97,15 @@ export function commentIterator(
 
   let processedIndices: CommentBlockIndices[] = []
 
+  let lastProcessed: CommentBlockIndices | undefined =
+    undefined
+
   let index = -1
 
   for (const module of sortedIndices) {
     index++
+
+    const nextModule = sortedIndices[index + 1]
 
     if (index === 0 && $.show) {
       strings.push(
@@ -112,6 +117,8 @@ export function commentIterator(
     }
 
     if (!processedIndices.includes(module)) {
+      lastProcessed = module
+
       const matches = cb.match(module, $)
 
       if (module.trigger === "ref" && matches?.length) {
@@ -178,10 +185,7 @@ export function commentIterator(
         for (const match of matches || [undefined]) {
           const out = commentIterator(body, children, {
             callbacks: cb,
-            iterator: {
-              ...match,
-              memo: { ...$.memo, ...match?.memo },
-            },
+            iterator: match,
             originals: og,
           })
 
@@ -191,26 +195,28 @@ export function commentIterator(
         }
       }
 
-      const nextModule = sortedIndices[index + 1]
-
-      if ($.show) {
-        if (nextModule) {
-          strings.push(
-            cb.process(
-              src.slice(
-                module.endIndex,
-                nextModule.startCommentIndex
-              ),
-              $
-            )
+      if (
+        $.show &&
+        nextModule &&
+        !processedIndices.includes(nextModule)
+      ) {
+        strings.push(
+          cb.process(
+            src.slice(
+              module.endIndex,
+              nextModule.startCommentIndex
+            ),
+            $
           )
-        } else {
-          strings.push(
-            cb.process(src.slice(module.endIndex, -1), $)
-          )
-        }
+        )
       }
     }
+  }
+
+  if (lastProcessed && $.show) {
+    strings.push(
+      cb.process(src.slice(lastProcessed.endIndex, -1), $)
+    )
   }
 
   const out = (
