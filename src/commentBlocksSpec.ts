@@ -17,6 +17,7 @@ body1
     -->   
     body3
   body2.2
+  <!-- ref: mod3 -->
 body1.2
 <!-- mod: mod4, key4: val -->
 body4
@@ -30,7 +31,7 @@ describe("commentIterator", (it) => {
     // console.warn(JSON.stringify(output))
 
     expect(output).toBe(
-      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\nbody1.2\nbody4"
+      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\n  \n    body3\n\nbody1.2\nbody4"
     )
   })
 
@@ -88,7 +89,7 @@ describe("commentIterator", (it) => {
 
     // console.warn(JSON.stringify(output))
 
-    expect(output).toBe("body1\n  \nbody1.2\nbody4")
+    expect(output).toBe("body1\n  \n  \nbody1.2\nbody4")
   })
 
   it("two root matches with cascading show", () => {
@@ -105,7 +106,7 @@ describe("commentIterator", (it) => {
     // console.warn(JSON.stringify(output))
 
     expect(output).toBe(
-      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\nbody1.2\nbody4"
+      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\n  \n    body3\n\nbody1.2\nbody4"
     )
   })
 
@@ -119,9 +120,10 @@ describe("commentIterator", (it) => {
     })
 
     // console.warn(JSON.stringify(output))
+    // console.warn(output)
 
     expect(output).toBe(
-      "body2\n    \n    body3\n\n    body3\n\n  body2.2\n  body2\n    \n    body3\n\n    body3\n\n  body2.2"
+      "body2\n    \n    body3\n\n    body3\n\n  body2.2\n  body2\n    \n    body3\n\n    body3\n\n  body2.2\n    body3\n\n    body3"
     )
   })
 })

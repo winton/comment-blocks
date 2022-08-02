@@ -20,11 +20,13 @@ export interface CommentBlockCallbacks {
 }
 
 export interface CommentBlockIndices {
-  commentBody: string
+  moduleName: string
+  params: Record<string, string>
   indent: number
   startCommentIndex: number
   startBodyIndex: number
   endIndex: number
+  trigger: "mod" | "ref"
 }
 
 export const defaultCallbacks: Required<CommentBlockCallbacks> =
@@ -76,7 +78,7 @@ export function commentIterator(
 
   let index = -1
 
-  for (const module of minIndentMatches) {
+  for (let module of minIndentMatches) {
     index++
 
     if (index === 0 && $.show) {
@@ -88,55 +90,59 @@ export function commentIterator(
       )
     }
 
-    const paramPieces =
-      module.commentBody.split(/\s*[,\n]\s*/)
+    const matches = cb.match(module, $)
+    const ogModule = module
 
-    const moduleName = paramPieces.shift()
-
-    if (!moduleName) {
-      continue
-    }
-
-    const params = paramPieces
-      .map((piece) => piece.split(/\s*:\s*/))
-      .reduce((memo, [key, value]) => {
-        memo[key] = value
-        return memo
-      }, {} as Record<string, string>)
-
-    const matches = cb.match({ moduleName, params }, $)
-
-    const body = src.slice(
-      module.startBodyIndex,
-      module.endIndex
-    )
-
-    const offset = module.startBodyIndex
-
-    const children = indices
-      .filter(
-        ({ indent, startCommentIndex, endIndex }) =>
-          indent >= module.indent &&
-          module.startBodyIndex < startCommentIndex &&
-          module.endIndex > endIndex
-      )
-      .map(
-        (module): CommentBlockIndices => ({
-          ...module,
-          endIndex: module.endIndex - offset,
-          startBodyIndex: module.startBodyIndex - offset,
-          startCommentIndex:
-            module.startCommentIndex - offset,
-        })
+    if (module.trigger === "ref") {
+      const refModule = indices.find(
+        ({ moduleName }) => module.moduleName === moduleName
       )
 
-    for (const match of matches || [undefined]) {
-      const out = commentIterator(body, children, cb, match)
-
-      if (out) {
-        strings.push(" ".repeat(module.indent) + out)
+      if (refModule) {
+        module = refModule
       }
     }
+
+    if (module.trigger === "mod") {
+      const body = src.slice(
+        module.startBodyIndex,
+        module.endIndex
+      )
+
+      const offset = module.startBodyIndex
+
+      const children = indices
+        .filter(
+          ({ indent, startCommentIndex, endIndex }) =>
+            indent >= module.indent &&
+            module.startBodyIndex < startCommentIndex &&
+            module.endIndex > endIndex
+        )
+        .map(
+          (module): CommentBlockIndices => ({
+            ...module,
+            endIndex: module.endIndex - offset,
+            startBodyIndex: module.startBodyIndex - offset,
+            startCommentIndex:
+              module.startCommentIndex - offset,
+          })
+        )
+
+      for (const match of matches || [undefined]) {
+        const out = commentIterator(
+          body,
+          children,
+          cb,
+          match
+        )
+
+        if (out) {
+          strings.push(" ".repeat(module.indent) + out)
+        }
+      }
+    }
+
+    module = ogModule
 
     const nextModule = minIndentMatches[index + 1]
 
@@ -166,10 +172,11 @@ export function commentIndices(
   str: string,
   commentStart = "<!--",
   commentEnd = "-->",
-  nameKey = "mod"
+  modTrigger = "mod:",
+  refTrigger = "ref:"
 ): CommentBlockIndices[] {
   const commentRegex = new RegExp(
-    `${commentStart}\\s*${nameKey}: (.*?)${commentEnd}\\s*\\n(\\s*)`,
+    `^(\\s*)${commentStart}\\s*(${modTrigger}|${refTrigger})(.*?)${commentEnd}\\s*\\n(\\s*)`,
     "gms"
   )
 
@@ -178,28 +185,57 @@ export function commentIndices(
 
   while ((result = commentRegex.exec(str)) !== null) {
     const searchStr =
-      result[2] + str.slice(commentRegex.lastIndex)
+      result[4] + str.slice(commentRegex.lastIndex)
 
     const endIndex = searchStr.search(
       new RegExp(
-        `^(\\s{0,${result[2].length - 1}}[^\\s]|\\s{0,${
-          result[2].length
-        }}<!--\\s*${nameKey}:\\s)`,
+        `^(\\s{0,${
+          result[2] === refTrigger
+            ? ""
+            : result[4].length - 1
+        }}[^\\s]|\\s{0,${
+          result[4].length
+        }}<!--\\s*(${modTrigger}|${refTrigger}))`,
         "gms"
       )
     )
 
-    results.push({
-      commentBody: result[1].trim(),
-      indent: result[2].length,
-      startCommentIndex:
-        commentRegex.lastIndex - result[0].length,
-      startBodyIndex: commentRegex.lastIndex,
-      endIndex:
-        commentRegex.lastIndex +
-        (endIndex === -1 ? searchStr.length : endIndex) -
-        result[2].length,
-    })
+    const commentBody = result[3].trim()
+    const match = commentBody.match(/^([^,\n]+)(.*)/)
+
+    if (match) {
+      const params = match[2]
+        .trim()
+        .split(/\s*[,\n]\s*/)
+        .map((piece) => piece.split(/\s*:\s*/))
+        .reduce((memo, [key, value]) => {
+          if (key !== "") {
+            memo[key] = value || ""
+          }
+          return memo
+        }, {} as Record<string, string>)
+
+      results.push({
+        moduleName: match[1].trim(),
+        params,
+        indent:
+          result[2] === refTrigger
+            ? result[1].length
+            : result[4].length,
+        startCommentIndex:
+          commentRegex.lastIndex -
+          result[0].length +
+          result[1].length,
+        startBodyIndex: commentRegex.lastIndex,
+        endIndex:
+          commentRegex.lastIndex +
+          (endIndex === -1 ? searchStr.length : endIndex) -
+          result[4].length,
+        trigger: (result[2] === refTrigger
+          ? "ref"
+          : "mod") as "ref" | "mod",
+      })
+    }
   }
 
   return results
