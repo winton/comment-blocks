@@ -1,4 +1,4 @@
-export interface CommentBlockOptions {
+export interface CommentBlockIteratorOptions {
   show?: boolean
   params?: Record<string, string>
   values?: Record<string, string>
@@ -6,27 +6,31 @@ export interface CommentBlockOptions {
 
 export interface CommentBlockCallbacks {
   match?: (
-    comment: {
-      moduleName: string
-      params: Record<string, string>
-    },
-    options: CommentBlockOptions
-  ) => CommentBlockOptions[] | undefined
+    module: CommentBlockIndices,
+    options: CommentBlockIteratorOptions
+  ) => CommentBlockIteratorOptions[] | undefined
 
   process?: (
     str: string,
-    options: CommentBlockOptions
+    options: CommentBlockIteratorOptions
   ) => string
 }
 
+export interface CommentBlockIndicesOptions {
+  commentStart?: string
+  commentEnd?: string
+  modTrigger?: string
+  refTrigger?: string
+}
+
 export interface CommentBlockIndices {
+  trigger: "mod" | "ref"
   moduleName: string
   params: Record<string, string>
   indent: number
   startCommentIndex: number
   startBodyIndex: number
   endIndex: number
-  trigger: "mod" | "ref"
 }
 
 export const defaultCallbacks: Required<CommentBlockCallbacks> =
@@ -35,23 +39,31 @@ export const defaultCallbacks: Required<CommentBlockCallbacks> =
     match: () => [{ show: true }],
   }
 
-export const defaultOptions: Required<CommentBlockOptions> =
+export const defaultOptions: Required<CommentBlockIteratorOptions> =
   {
     show: false,
     params: {},
     values: {},
   }
 
+export const defaultIndicesOptions: Required<CommentBlockIndicesOptions> =
+  {
+    commentStart: "<!--",
+    commentEnd: "-->",
+    modTrigger: "mod:",
+    refTrigger: "ref:",
+  }
+
 export function commentIterator(
   src: string,
   indices: CommentBlockIndices[],
   callbacks: CommentBlockCallbacks = {},
-  options: CommentBlockOptions = {}
+  options: CommentBlockIteratorOptions = {}
 ): string | undefined {
   const $ = {
     ...defaultOptions,
     ...options,
-  } as Required<CommentBlockOptions>
+  } as Required<CommentBlockIteratorOptions>
 
   const cb = {
     ...defaultCallbacks,
@@ -170,17 +182,25 @@ export function commentIterator(
 
 export function commentIndices(
   str: string,
-  commentStart = "<!--",
-  commentEnd = "-->",
-  modTrigger = "mod:",
-  refTrigger = "ref:"
+  options: CommentBlockIndicesOptions = {}
 ): CommentBlockIndices[] {
+  const {
+    commentStart,
+    commentEnd,
+    modTrigger,
+    refTrigger,
+  } = {
+    ...defaultIndicesOptions,
+    ...options,
+  } as Required<CommentBlockIndicesOptions>
+
   const commentRegex = new RegExp(
     `^(\\s*)${commentStart}\\s*(${modTrigger}|${refTrigger})(.*?)${commentEnd}\\s*\\n(\\s*)`,
     "gms"
   )
 
   const results = []
+
   let result
 
   while ((result = commentRegex.exec(str)) !== null) {
@@ -243,11 +263,16 @@ export function commentIndices(
 
 export default (
   str: string,
-  callbacks: CommentBlockCallbacks
+  options: {
+    callbacks?: CommentBlockCallbacks
+    indices?: CommentBlockIndicesOptions
+    iterator?: CommentBlockIteratorOptions
+  } = {}
 ) => {
   return commentIterator(
     str,
-    commentIndices(str),
-    callbacks
+    commentIndices(str, options.indices),
+    options.callbacks,
+    options.iterator
   )
 }
