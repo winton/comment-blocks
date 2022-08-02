@@ -31,7 +31,7 @@ describe("commentIterator", (it) => {
     // console.warn(JSON.stringify(output))
 
     expect(output).toBe(
-      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\n  \n    body3\n\nbody1.2\nbody4"
+      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\n  \n    body3\nbody1.2\nbody4"
     )
   })
 
@@ -114,7 +114,7 @@ describe("commentIterator", (it) => {
     // console.warn(JSON.stringify(output))
 
     expect(output).toBe(
-      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\n  \n    body3\n\nbody1.2\nbody4"
+      "body1\n  \n  body2\n    \n    body3\n\n  body2.2\n  \n    body3\nbody1.2\nbody4"
     )
   })
 
@@ -133,7 +133,7 @@ describe("commentIterator", (it) => {
     // console.warn(output)
 
     expect(output).toBe(
-      "body2\n    \n    body3\n\n    body3\n\n  body2.2\n  body2\n    \n    body3\n\n    body3\n\n  body2.2\n    body3\n\n    body3"
+      "body2\n    \n    body3\n\n    body3\n\n  body2.2\n  body2\n    \n    body3\n\n    body3\n\n  body2.2\n    body3\n\n    body3\n    body3\n\n    body3"
     )
   })
 })

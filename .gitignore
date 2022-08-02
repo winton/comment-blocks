@@ -2,4 +2,6 @@
 .DS_Store
 /.serverless
 /build
+/fixture
 /node_modules
+/src/harnessSpec.ts

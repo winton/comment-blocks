@@ -5,6 +5,11 @@ export interface CommentBlockIteratorOptions {
   values?: Record<string, string>
 }
 
+export interface CommentBlockOriginalsOptions {
+  indices: CommentBlockIndices[]
+  src: string
+}
+
 export interface CommentBlockCallbackOptions {
   match?: (
     module: CommentBlockIndices,
@@ -62,6 +67,7 @@ export function commentIterator(
   options: {
     iterator?: CommentBlockIteratorOptions
     callbacks?: CommentBlockCallbackOptions
+    originals?: CommentBlockOriginalsOptions
   } = {}
 ): string | undefined {
   const $ = {
@@ -73,6 +79,8 @@ export function commentIterator(
     ...defaultCallbackOptions,
     ...options.callbacks,
   } as Required<CommentBlockCallbackOptions>
+
+  const og = options?.originals || { src, indices }
 
   if (indices.length === 0 && $.show) {
     return cb.process(src, $)
@@ -94,7 +102,7 @@ export function commentIterator(
 
   let index = -1
 
-  for (let module of minIndentMatches) {
+  for (const module of minIndentMatches) {
     index++
 
     if (index === 0 && $.show) {
@@ -107,15 +115,42 @@ export function commentIterator(
     }
 
     const matches = cb.match(module, $)
-    const ogModule = module
 
-    if (module.trigger === "ref") {
-      const refModule = indices.find(
+    if (module.trigger === "ref" && matches?.length) {
+      const refModule = og.indices.find(
         ({ moduleName }) => module.moduleName === moduleName
       )
 
       if (refModule) {
-        module = refModule
+        for (const match of matches) {
+          const out = commentIterator(
+            og.src.slice(
+              refModule.startBodyIndex,
+              refModule.endIndex
+            ),
+            offsetIndices(
+              og.indices.filter(
+                ({ startCommentIndex, endIndex }) =>
+                  startCommentIndex >=
+                    refModule.startCommentIndex &&
+                  endIndex <= refModule.endIndex
+              ),
+              refModule.startBodyIndex
+            ),
+            {
+              callbacks: cb,
+              iterator: {
+                ...match,
+                memo: { ...$.memo, ...match?.memo },
+              },
+              originals: og,
+            }
+          )
+
+          if (out) {
+            strings.push(" ".repeat(refModule.indent) + out)
+          }
+        }
       }
     }
 
@@ -125,24 +160,15 @@ export function commentIterator(
         module.endIndex
       )
 
-      const offset = module.startBodyIndex
-
-      const children = indices
-        .filter(
+      const children = offsetIndices(
+        indices.filter(
           ({ indent, startCommentIndex, endIndex }) =>
             indent >= module.indent &&
             module.startBodyIndex < startCommentIndex &&
             module.endIndex > endIndex
-        )
-        .map(
-          (module): CommentBlockIndices => ({
-            ...module,
-            endIndex: module.endIndex - offset,
-            startBodyIndex: module.startBodyIndex - offset,
-            startCommentIndex:
-              module.startCommentIndex - offset,
-          })
-        )
+        ),
+        module.startBodyIndex
+      )
 
       for (const match of matches || [undefined]) {
         const out = commentIterator(body, children, {
@@ -151,6 +177,7 @@ export function commentIterator(
             ...match,
             memo: { ...$.memo, ...match?.memo },
           },
+          originals: og,
         })
 
         if (out) {
@@ -158,8 +185,6 @@ export function commentIterator(
         }
       }
     }
-
-    module = ogModule
 
     const nextModule = minIndentMatches[index + 1]
 
@@ -264,6 +289,20 @@ export function commentIndices(
   }
 
   return results
+}
+
+export function offsetIndices(
+  indices: CommentBlockIndices[],
+  offset: number
+) {
+  return indices.map(
+    (module): CommentBlockIndices => ({
+      ...module,
+      endIndex: module.endIndex - offset,
+      startBodyIndex: module.startBodyIndex - offset,
+      startCommentIndex: module.startCommentIndex - offset,
+    })
+  )
 }
 
 export default (
