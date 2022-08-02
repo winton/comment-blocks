@@ -4,7 +4,7 @@ export interface CommentBlockIteratorOptions {
   values?: Record<string, string>
 }
 
-export interface CommentBlockCallbacks {
+export interface CommentBlockCallbackOptions {
   match?: (
     module: CommentBlockIndices,
     options: CommentBlockIteratorOptions
@@ -33,13 +33,13 @@ export interface CommentBlockIndices {
   endIndex: number
 }
 
-export const defaultCallbacks: Required<CommentBlockCallbacks> =
+export const defaultCallbackOptions: Required<CommentBlockCallbackOptions> =
   {
     process: (str) => str,
     match: () => [{ show: true }],
   }
 
-export const defaultOptions: Required<CommentBlockIteratorOptions> =
+export const defaultIteratorOptions: Required<CommentBlockIteratorOptions> =
   {
     show: false,
     params: {},
@@ -57,18 +57,20 @@ export const defaultIndicesOptions: Required<CommentBlockIndicesOptions> =
 export function commentIterator(
   src: string,
   indices: CommentBlockIndices[],
-  callbacks: CommentBlockCallbacks = {},
-  options: CommentBlockIteratorOptions = {}
+  options: {
+    iterator?: CommentBlockIteratorOptions
+    callbacks?: CommentBlockCallbackOptions
+  } = {}
 ): string | undefined {
   const $ = {
-    ...defaultOptions,
-    ...options,
+    ...defaultIteratorOptions,
+    ...options.iterator,
   } as Required<CommentBlockIteratorOptions>
 
   const cb = {
-    ...defaultCallbacks,
-    ...callbacks,
-  } as Required<CommentBlockCallbacks>
+    ...defaultCallbackOptions,
+    ...options.callbacks,
+  } as Required<CommentBlockCallbackOptions>
 
   if (indices.length === 0 && $.show) {
     return cb.process(src, $)
@@ -141,12 +143,10 @@ export function commentIterator(
         )
 
       for (const match of matches || [undefined]) {
-        const out = commentIterator(
-          body,
-          children,
-          cb,
-          match
-        )
+        const out = commentIterator(body, children, {
+          callbacks: cb,
+          iterator: match,
+        })
 
         if (out) {
           strings.push(" ".repeat(module.indent) + out)
@@ -158,7 +158,7 @@ export function commentIterator(
 
     const nextModule = minIndentMatches[index + 1]
 
-    if (options.show) {
+    if ($.show) {
       if (nextModule) {
         strings.push(
           cb.process(
@@ -264,7 +264,7 @@ export function commentIndices(
 export default (
   str: string,
   options: {
-    callbacks?: CommentBlockCallbacks
+    callbacks?: CommentBlockCallbackOptions
     indices?: CommentBlockIndicesOptions
     iterator?: CommentBlockIteratorOptions
   } = {}
@@ -272,7 +272,6 @@ export default (
   return commentIterator(
     str,
     commentIndices(str, options.indices),
-    options.callbacks,
-    options.iterator
+    options
   )
 }
