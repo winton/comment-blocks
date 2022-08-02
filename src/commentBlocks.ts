@@ -19,7 +19,7 @@ export interface CommentBlockCallbackOptions {
   process?: (
     str: string,
     options: CommentBlockIteratorOptions
-  ) => string
+  ) => string | undefined
 }
 
 export interface CommentBlockIndicesOptions {
@@ -213,7 +213,11 @@ export function commentIterator(
     }
   }
 
-  const out = strings
+  const out = (
+    strings.filter(
+      (str) => typeof str === "string"
+    ) as string[]
+  )
     .map((str) => str.trimEnd())
     .filter((str) => str.length)
     .join("\n")
