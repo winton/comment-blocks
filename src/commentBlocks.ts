@@ -138,7 +138,7 @@ export function commentIterator(
           for (const match of matches) {
             const out = commentIterator(
               og.src.slice(
-                refModule.startBodyIndex,
+                refModule.startCommentIndex,
                 refModule.endIndex
               ),
               offsetIndices(
@@ -148,7 +148,7 @@ export function commentIterator(
                       refModule.startCommentIndex &&
                     endIndex <= refModule.endIndex
                 ),
-                refModule.startBodyIndex
+                refModule.startCommentIndex
               ),
               {
                 callbacks: cb,
