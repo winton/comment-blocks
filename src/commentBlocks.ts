@@ -26,7 +26,7 @@ export interface CommentBlockCallbackOptions {
     memo: Record<string, any>
   ) =>
     | {
-        options: CommentBlockIteratorOptions[] | undefined
+        options?: CommentBlockIteratorOptions[]
         memo?: Record<string, any>
       }
     | undefined
