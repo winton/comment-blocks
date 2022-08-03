@@ -401,9 +401,9 @@ export function validateParamsMerge(
 export default (
   str: string,
   options?: {
-    callbacks: CommentBlockCallbackOptions
-    indices: CommentBlockIndicesOptions
-    iterator: CommentBlockIteratorOptions
+    callbacks?: CommentBlockCallbackOptions
+    indices?: CommentBlockIndicesOptions
+    iterator?: CommentBlockIteratorOptions
   }
 ) => {
   return commentIterator(
