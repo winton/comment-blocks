@@ -4,10 +4,10 @@ export interface CommentBlockIteratorParams {
 }
 
 export interface CommentBlockIteratorOptions {
-  show?: boolean
-  memo?: Record<string, any>
-  params?: Record<string, CommentBlockIteratorParams>
-  values?: Record<string, string>
+  show: boolean
+  memo: Record<string, any>
+  params: Record<string, CommentBlockIteratorParams>
+  values: Record<string, string>
 }
 
 export interface CommentBlockOriginalsOptions {
@@ -16,22 +16,27 @@ export interface CommentBlockOriginalsOptions {
 }
 
 export interface CommentBlockCallbackOptions {
-  match?: (
+  hasMatch: (
+    module: CommentBlockIndices,
+    options: CommentBlockIteratorOptions
+  ) => boolean
+
+  match: (
     module: CommentBlockIndices,
     options: CommentBlockIteratorOptions
   ) => CommentBlockIteratorOptions[] | undefined
 
-  process?: (
+  process: (
     str: string,
     options: CommentBlockIteratorOptions
   ) => string | undefined
 }
 
 export interface CommentBlockIndicesOptions {
-  commentStart?: string
-  commentEnd?: string
-  modTrigger?: string
-  refTrigger?: string
+  commentStart: string
+  commentEnd: string
+  modTrigger: string
+  refTrigger: string
 }
 
 export interface CommentBlockIndices {
@@ -47,7 +52,8 @@ export interface CommentBlockIndices {
 export const defaultCallbackOptions: Required<CommentBlockCallbackOptions> =
   {
     process: (str) => str,
-    match: () => [{ show: true }],
+    hasMatch: () => true,
+    match: (mod, options) => [{ ...options, show: true }],
   }
 
 export const defaultIteratorOptions: Required<CommentBlockIteratorOptions> =
@@ -66,6 +72,17 @@ export const defaultIndicesOptions: Required<CommentBlockIndicesOptions> =
     refTrigger: "ref:",
   }
 
+export function hasParent(
+  module: CommentBlockIndices,
+  indices: CommentBlockIndices[]
+) {
+  return indices.find(
+    ({ startCommentIndex, endIndex }) =>
+      module.endIndex < endIndex &&
+      module.startCommentIndex > startCommentIndex
+  )
+}
+
 export function commentIterator(
   src: string,
   indices: CommentBlockIndices[],
@@ -75,42 +92,34 @@ export function commentIterator(
     originals?: CommentBlockOriginalsOptions
   } = {}
 ): string | undefined {
-  const $ = {
-    ...defaultIteratorOptions,
-    ...options.iterator,
-  } as Required<CommentBlockIteratorOptions>
-
-  const cb = {
-    ...defaultCallbackOptions,
-    ...options.callbacks,
-  } as Required<CommentBlockCallbackOptions>
-
-  const og = {
-    ...{ src, indices },
-    ...options.originals,
-  } as Required<CommentBlockOriginalsOptions>
+  const $ = options.iterator || defaultIteratorOptions
+  const cb = options.callbacks || defaultCallbackOptions
+  const og = options.originals || { src, indices }
 
   if (indices.length === 0 && $.show) {
     return cb.process(src, $)
   }
 
-  const sortedIndices = indices.sort(
-    (a, b) => a.startCommentIndex - b.startCommentIndex
+  const hasMatch = indices.some((module) =>
+    cb.hasMatch(module, $)
   )
 
-  const strings = []
+  if (!hasMatch && options.iterator === undefined) {
+    return
+  }
 
-  let processedIndices: CommentBlockIndices[] = []
+  const parentIndices = indices
+    .filter((module) => !hasParent(module, indices))
+    .sort(
+      (a, b) => a.startCommentIndex - b.startCommentIndex
+    )
 
-  let lastProcessed: CommentBlockIndices | undefined =
-    undefined
+  const strings: (string | undefined)[] = []
 
   let index = -1
 
-  for (const module of sortedIndices) {
+  for (let module of parentIndices) {
     index++
-
-    const nextModule = sortedIndices[index + 1]
 
     if (index === 0 && $.show) {
       strings.push(
@@ -121,109 +130,81 @@ export function commentIterator(
       )
     }
 
-    if (!processedIndices.includes(module)) {
-      lastProcessed = module
+    const matches = cb.match(module, $)
 
-      validateParamsMerge(module, $)
+    const ogModule: CommentBlockIndices = module
 
-      const matches = cb.match(module, $)
+    let refModule: CommentBlockIndices | undefined =
+      undefined
 
-      if (module.trigger === "ref" && matches?.length) {
-        const refModule = og.indices.find(
-          ({ moduleName }) =>
-            module.moduleName === moduleName
-        )
+    if (module.trigger === "ref") {
+      refModule = og.indices.find(
+        ({ moduleName, trigger }) =>
+          module.moduleName === moduleName &&
+          trigger === "mod"
+      )
 
-        if (refModule) {
-          for (const match of matches) {
-            const out = commentIterator(
-              og.src.slice(
-                refModule.startCommentIndex,
-                refModule.endIndex
-              ),
-              offsetIndices(
-                og.indices.filter(
-                  ({ startCommentIndex, endIndex }) =>
-                    startCommentIndex >=
-                      refModule.startCommentIndex &&
-                    endIndex <= refModule.endIndex
-                ),
-                refModule.startCommentIndex
-              ),
-              {
-                callbacks: cb,
-                iterator: match,
-                originals: og,
-              }
-            )
-
-            if (out) {
-              strings.push(
-                " ".repeat(refModule.indent) + out
-              )
-            }
-          }
-        }
-      }
-
-      if (module.trigger === "mod") {
-        const body = src.slice(
-          module.startBodyIndex,
-          module.endIndex
-        )
-
-        const childIndices = indices.filter(
-          ({ startCommentIndex, endIndex }) =>
-            module.startBodyIndex < startCommentIndex &&
-            module.endIndex > endIndex
-        )
-
-        processedIndices =
-          processedIndices.concat(childIndices)
-
-        const offsetChildIndices = offsetIndices(
-          childIndices,
-          module.startBodyIndex
-        )
-
-        for (const match of matches || [undefined]) {
-          const out = commentIterator(
-            body,
-            offsetChildIndices,
-            {
-              callbacks: cb,
-              iterator: match,
-              originals: og,
-            }
-          )
-
-          if (out) {
-            strings.push(" ".repeat(module.indent) + out)
-          }
-        }
-      }
-
-      if (
-        $.show &&
-        nextModule &&
-        !processedIndices.includes(nextModule)
-      ) {
-        strings.push(
-          cb.process(
-            src.slice(
-              module.endIndex,
-              nextModule.startCommentIndex
-            ),
-            $
-          )
+      if (refModule) {
+        module = refModule
+      } else {
+        throw new Error(
+          `Reference module "${module.moduleName}" not found.`
         )
       }
     }
+
+    const indent = " ".repeat(module.indent)
+
+    const childIndices = offsetIndices(
+      (refModule ? og.indices : indices).filter(
+        ({ startBodyIndex, endIndex }) =>
+          module.startBodyIndex < startBodyIndex &&
+          module.endIndex > endIndex
+      ),
+      module.startBodyIndex
+    )
+
+    for (const match of matches ||
+      (hasMatch ? [undefined] : [])) {
+      const out = commentIterator(
+        (refModule ? og.src : src).slice(
+          module.startBodyIndex,
+          module.endIndex
+        ),
+        childIndices,
+        {
+          callbacks: cb,
+          originals: og,
+          iterator: match,
+        }
+      )
+
+      if (out) {
+        strings.push(indent + out)
+      }
+    }
+
+    const nextModule = parentIndices[index + 1]
+
+    if ($.show && nextModule) {
+      strings.push(
+        cb.process(
+          src.slice(
+            ogModule.endIndex,
+            nextModule.startCommentIndex
+          ),
+          $
+        )
+      )
+    }
   }
 
-  if (lastProcessed && $.show) {
+  if ($.show && parentIndices.length) {
+    const lastModule =
+      parentIndices[parentIndices.length - 1]
+
     strings.push(
-      cb.process(src.slice(lastProcessed.endIndex, -1), $)
+      cb.process(src.slice(lastModule.endIndex, -1), $)
     )
   }
 
@@ -242,12 +223,9 @@ export function commentIterator(
 
 export function commentIndices(
   str: string,
-  options: CommentBlockIndicesOptions = {}
+  options?: CommentBlockIndicesOptions
 ): CommentBlockIndices[] {
-  const $ = {
-    ...defaultIndicesOptions,
-    ...options,
-  } as Required<CommentBlockIndicesOptions>
+  const $ = options || defaultIndicesOptions
 
   const commentStart = escapeRegex($.commentStart)
   const commentEnd = escapeRegex($.commentEnd)
@@ -422,15 +400,15 @@ export function validateParamsMerge(
 
 export default (
   str: string,
-  options: {
-    callbacks?: CommentBlockCallbackOptions
-    indices?: CommentBlockIndicesOptions
-    iterator?: CommentBlockIteratorOptions
-  } = {}
+  options?: {
+    callbacks: CommentBlockCallbackOptions
+    indices: CommentBlockIndicesOptions
+    iterator: CommentBlockIteratorOptions
+  }
 ) => {
   return commentIterator(
     str,
-    commentIndices(str, options.indices),
+    commentIndices(str, options?.indices),
     options
   )
 }

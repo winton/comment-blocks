@@ -43,7 +43,11 @@ describe("commentIterator", (it) => {
   it("no matches", () => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
-      callbacks: { match: () => undefined },
+      callbacks: {
+        match: () => undefined,
+        hasMatch: () => false,
+        process: (str) => str,
+      },
     })
 
     // console.warn(JSON.stringify(output))
@@ -55,14 +59,22 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match: ({ moduleName }) =>
-          moduleName === "mod2"
-            ? [{ show: true }]
-            : undefined,
+        match(module, options) {
+          return this.hasMatch(module, options)
+            ? [{ ...options, show: true }]
+            : undefined
+        },
+        hasMatch({ moduleName }) {
+          return moduleName === "mod2"
+        },
+        process(str) {
+          return str
+        },
       },
     })
 
     // console.warn(JSON.stringify(output))
+    // console.warn(output)
 
     expect(output).toBe("body2\n  body2.2")
   })
@@ -71,12 +83,18 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match: ({ moduleName }, { show }) =>
-          moduleName === "mod2"
-            ? [{ show: true }]
-            : show
-            ? [{ show: true }]
-            : undefined,
+        match(module, options) {
+          return this.hasMatch(module, options) ||
+            options.show
+            ? [{ ...options, show: true }]
+            : undefined
+        },
+        hasMatch({ moduleName }) {
+          return moduleName === "mod2"
+        },
+        process(str) {
+          return str
+        },
       },
     })
 
@@ -89,10 +107,19 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match: ({ moduleName }) =>
-          moduleName === "mod1" || moduleName === "mod4"
-            ? [{ show: true }]
-            : undefined,
+        match(module, options) {
+          return this.hasMatch(module, options)
+            ? [{ ...options, show: true }]
+            : undefined
+        },
+        hasMatch({ moduleName }) {
+          return (
+            moduleName === "mod1" || moduleName === "mod4"
+          )
+        },
+        process(str) {
+          return str
+        },
       },
     })
 
@@ -105,12 +132,20 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match: ({ moduleName }, { show }) =>
-          moduleName === "mod1" || moduleName === "mod4"
-            ? [{ show: true }]
-            : show
-            ? [{ show: true }]
-            : undefined,
+        match(module, options) {
+          return this.hasMatch(module, options) ||
+            options.show
+            ? [{ ...options, show: true }]
+            : undefined
+        },
+        hasMatch({ moduleName }) {
+          return (
+            moduleName === "mod1" || moduleName === "mod4"
+          )
+        },
+        process(str) {
+          return str
+        },
       },
     })
 
@@ -126,10 +161,22 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match: ({ moduleName }) =>
-          moduleName === "mod2" || moduleName === "mod3"
-            ? [{ show: true }, { show: true }]
-            : undefined,
+        match(module, options) {
+          return this.hasMatch(module, options)
+            ? [
+                { ...options, show: true },
+                { ...options, show: true },
+              ]
+            : undefined
+        },
+        hasMatch({ moduleName }) {
+          return (
+            moduleName === "mod2" || moduleName === "mod3"
+          )
+        },
+        process(str) {
+          return str
+        },
       },
     })
 
@@ -137,7 +184,7 @@ describe("commentIterator", (it) => {
     // console.warn(output)
 
     expect(output).toBe(
-      "body2\n    body3\n    body3\n  body2.2\n  body2\n    body3\n    body3\n  body2.2\n    body3\n    body3\n    body3\n    body3"
+      "body2\n    body3\n    body3\n  body2.2\n  body2\n    body3\n    body3\n  body2.2\n    body3\n    body3"
     )
   })
 })
