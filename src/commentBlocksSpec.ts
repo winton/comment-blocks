@@ -59,9 +59,9 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match(module, options) {
-          return this.hasMatch(module, options)
-            ? [{ ...options, show: true }]
+        match(module, options, memo) {
+          return this.hasMatch(module, options, memo)
+            ? { options: [options] }
             : undefined
         },
         hasMatch({ moduleName }) {
@@ -83,10 +83,10 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match(module, options) {
-          return this.hasMatch(module, options) ||
-            options.show
-            ? [{ ...options, show: true }]
+        match(module, options, memo) {
+          return this.hasMatch(module, options, memo) ||
+            memo.show
+            ? { options: [options], memo: { show: true } }
             : undefined
         },
         hasMatch({ moduleName }) {
@@ -107,9 +107,9 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match(module, options) {
-          return this.hasMatch(module, options)
-            ? [{ ...options, show: true }]
+        match(module, options, memo) {
+          return this.hasMatch(module, options, memo)
+            ? { options: [options] }
             : undefined
         },
         hasMatch({ moduleName }) {
@@ -132,10 +132,10 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match(module, options) {
-          return this.hasMatch(module, options) ||
-            options.show
-            ? [{ ...options, show: true }]
+        match(module, options, memo) {
+          return this.hasMatch(module, options, memo) ||
+            memo.show
+            ? { options: [options], memo: { show: true } }
             : undefined
         },
         hasMatch({ moduleName }) {
@@ -161,12 +161,9 @@ describe("commentIterator", (it) => {
     const indices = commentIndices(html)
     const output = commentIterator(html, indices, {
       callbacks: {
-        match(module, options) {
-          return this.hasMatch(module, options)
-            ? [
-                { ...options, show: true },
-                { ...options, show: true },
-              ]
+        match(module, options, memo) {
+          return this.hasMatch(module, options, memo)
+            ? { options: [options, options] }
             : undefined
         },
         hasMatch({ moduleName }) {

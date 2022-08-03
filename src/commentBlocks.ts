@@ -4,8 +4,6 @@ export interface CommentBlockIteratorParams {
 }
 
 export interface CommentBlockIteratorOptions {
-  show: boolean
-  memo: Record<string, any>
   params: Record<string, CommentBlockIteratorParams>
   values: Record<string, string>
 }
@@ -18,17 +16,25 @@ export interface CommentBlockOriginalsOptions {
 export interface CommentBlockCallbackOptions {
   hasMatch: (
     module: CommentBlockIndices,
-    options: CommentBlockIteratorOptions
+    options: CommentBlockIteratorOptions,
+    memo: Record<string, any>
   ) => boolean
 
   match: (
     module: CommentBlockIndices,
-    options: CommentBlockIteratorOptions
-  ) => CommentBlockIteratorOptions[] | undefined
+    options: CommentBlockIteratorOptions,
+    memo: Record<string, any>
+  ) =>
+    | {
+        options: CommentBlockIteratorOptions[] | undefined
+        memo?: Record<string, any>
+      }
+    | undefined
 
   process: (
     str: string,
-    options: CommentBlockIteratorOptions
+    options: CommentBlockIteratorOptions,
+    memo: Record<string, any>
   ) => string | undefined
 }
 
@@ -53,13 +59,14 @@ export const defaultCallbackOptions: Required<CommentBlockCallbackOptions> =
   {
     process: (str) => str,
     hasMatch: () => true,
-    match: (mod, options) => [{ ...options, show: true }],
+    match: (mod, options, memo) => ({
+      options: [options],
+      memo,
+    }),
   }
 
 export const defaultIteratorOptions: Required<CommentBlockIteratorOptions> =
   {
-    show: false,
-    memo: {},
     params: {},
     values: {},
   }
@@ -90,22 +97,28 @@ export function commentIterator(
     iterator?: CommentBlockIteratorOptions
     callbacks?: CommentBlockCallbackOptions
     originals?: CommentBlockOriginalsOptions
+    memo?: Record<string, any>
+    capture?: boolean
   } = {}
 ): string | undefined {
   const $ = options.iterator || defaultIteratorOptions
   const cb = options.callbacks || defaultCallbackOptions
   const og = options.originals || { src, indices }
+  const memo = options.memo || {}
+  const capture = options.capture || false
 
-  if (indices.length === 0 && $.show) {
-    return cb.process(src, $)
+  if (indices.length === 0 && capture) {
+    return cb.process(src, $, memo)
   }
 
-  const hasMatch = indices.some((module) =>
-    cb.hasMatch(module, $)
-  )
+  if (!capture) {
+    const hasMatch = indices.some((module) =>
+      cb.hasMatch(module, $, memo)
+    )
 
-  if (!hasMatch && options.iterator === undefined) {
-    return
+    if (!hasMatch) {
+      return
+    }
   }
 
   const parentIndices = indices
@@ -121,16 +134,17 @@ export function commentIterator(
   for (let module of parentIndices) {
     index++
 
-    if (index === 0 && $.show) {
+    if (index === 0 && capture) {
       strings.push(
         cb.process(
           src.slice(0, module.startCommentIndex),
-          $
+          $,
+          memo
         )
       )
     }
 
-    const matches = cb.match(module, $)
+    const match = cb.match(module, $, memo)
 
     const ogModule: CommentBlockIndices = module
 
@@ -164,47 +178,59 @@ export function commentIterator(
       module.startBodyIndex
     )
 
-    for (const match of matches ||
-      (hasMatch ? [undefined] : [])) {
-      const out = commentIterator(
-        (refModule ? og.src : src).slice(
-          module.startBodyIndex,
-          module.endIndex
-        ),
-        childIndices,
-        {
-          callbacks: cb,
-          originals: og,
-          iterator: match,
-        }
-      )
+    const childMatches = childIndices.some((module) =>
+      cb.hasMatch(module, $, memo)
+    )
 
-      if (out) {
-        strings.push(indent + out)
+    if (match || childMatches) {
+      for (const iterator of match?.options || [$]) {
+        const out = commentIterator(
+          (refModule ? og.src : src).slice(
+            module.startBodyIndex,
+            module.endIndex
+          ),
+          childIndices,
+          {
+            callbacks: cb,
+            originals: og,
+            iterator,
+            memo: match?.memo,
+            capture: !!match?.options,
+          }
+        )
+
+        if (out) {
+          strings.push(indent + out)
+        }
       }
     }
 
     const nextModule = parentIndices[index + 1]
 
-    if ($.show && nextModule) {
+    if (nextModule && capture) {
       strings.push(
         cb.process(
           src.slice(
             ogModule.endIndex,
             nextModule.startCommentIndex
           ),
-          $
+          $,
+          memo
         )
       )
     }
   }
 
-  if ($.show && parentIndices.length) {
+  if (parentIndices.length && capture) {
     const lastModule =
       parentIndices[parentIndices.length - 1]
 
     strings.push(
-      cb.process(src.slice(lastModule.endIndex, -1), $)
+      cb.process(
+        src.slice(lastModule.endIndex, -1),
+        $,
+        memo
+      )
     )
   }
 
@@ -404,6 +430,8 @@ export default (
     callbacks?: CommentBlockCallbackOptions
     indices?: CommentBlockIndicesOptions
     iterator?: CommentBlockIteratorOptions
+    memo?: Record<string, any>
+    capture?: boolean
   }
 ) => {
   return commentIterator(
