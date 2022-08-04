@@ -356,12 +356,20 @@ export function replaceParams(
     for (const key in params) {
       const { optional, value } = params[key]
 
-      if (values && values[key] && value === "this") {
+      if (
+        values &&
+        values[key] !== undefined &&
+        value === "this"
+      ) {
         newStr = values[key]
         continue
       }
 
-      if (values && !optional && !values[key]) {
+      if (
+        values &&
+        !optional &&
+        values[key] !== undefined
+      ) {
         newStr = undefined
         continue
       }
