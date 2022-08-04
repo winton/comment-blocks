@@ -368,7 +368,7 @@ export function replaceParams(
       if (
         values &&
         !optional &&
-        values[key] !== undefined
+        values[key] === undefined
       ) {
         newStr = undefined
         continue
