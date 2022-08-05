@@ -144,8 +144,6 @@ export function commentIterator(
       )
     }
 
-    const match = cb.match(module, $, memo)
-
     const ogModule: CommentBlockIndices = module
 
     let refModule: CommentBlockIndices | undefined =
@@ -165,6 +163,14 @@ export function commentIterator(
         )
       }
     }
+
+    const match = cb.match(
+      refModule
+        ? { ...module, moduleName: ogModule.moduleName }
+        : module,
+      $,
+      memo
+    )
 
     const indent = " ".repeat(module.indent)
 
