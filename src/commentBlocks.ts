@@ -104,6 +104,9 @@ export function commentIterator(
   const memo = options.memo || {}
   const capture = options.capture || false
 
+  delete $.params.ref
+  delete $.params.this
+
   if (indices.length === 0 && capture) {
     return cb.process(src, $, memo)
   }
