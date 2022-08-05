@@ -47,6 +47,8 @@ export interface CommentBlockIndicesOptions {
 export interface CommentBlockIndices {
   moduleName: string
   params: Record<string, CommentBlockIteratorParams>
+  thisParam: string
+  refParam: string
   indent: number
   startCommentIndex: number
   startBodyIndex: number
@@ -104,9 +106,6 @@ export function commentIterator(
   const memo = options.memo || {}
   const capture = options.capture || false
 
-  delete $.params.ref
-  delete $.params.this
-
   if (indices.length === 0 && capture) {
     return cb.process(src, $, memo)
   }
@@ -149,10 +148,9 @@ export function commentIterator(
     let refModule: CommentBlockIndices | undefined =
       undefined
 
-    if (module.params.ref) {
+    if (module.refParam) {
       refModule = og.indices.find(
-        ({ moduleName }) =>
-          module.params.ref.value === moduleName
+        ({ moduleName }) => module.refParam === moduleName
       )
 
       if (refModule) {
@@ -189,20 +187,29 @@ export function commentIterator(
 
     if (match || childMatches) {
       for (const iterator of match?.options || [$]) {
-        const out = commentIterator(
-          (refModule ? og.src : src).slice(
-            module.startBodyIndex,
-            module.endIndex
-          ),
-          childIndices,
-          {
-            callbacks: cb,
-            originals: og,
-            iterator,
-            memo: match?.memo,
-            capture: !!match?.options,
-          }
-        )
+        let out: string | undefined
+
+        if (
+          module.thisParam &&
+          iterator.values[module.thisParam]
+        ) {
+          out = iterator.values[module.thisParam]
+        } else {
+          out = commentIterator(
+            (refModule ? og.src : src).slice(
+              module.startBodyIndex,
+              module.endIndex
+            ),
+            childIndices,
+            {
+              callbacks: cb,
+              originals: og,
+              iterator,
+              memo: match?.memo,
+              capture: !!match?.options,
+            }
+          )
+        }
 
         if (out) {
           strings.push(indent + out)
@@ -296,10 +303,15 @@ export function commentIndices(
           return memo
         }, {} as Record<string, CommentBlockIteratorParams>)
 
+      const { ref: refParam, this: thisParam } = params
+
+      delete params.ref
+      delete params.this
+
       const endIndex = searchStr.search(
         new RegExp(
           `^(\\s{0,${
-            params.ref ? "" : result[3].length - 1
+            refParam ? "" : result[3].length - 1
           }}[^\\s]|\\s{0,${
             result[3].length
           }}${commentStart}\\s*${modTrigger})`,
@@ -310,7 +322,9 @@ export function commentIndices(
       results.push({
         moduleName: match[1].trim(),
         params,
-        indent: params.ref
+        refParam: refParam?.value,
+        thisParam: thisParam?.value,
+        indent: refParam
           ? result[1].length
           : result[3].length,
         startCommentIndex:
@@ -357,16 +371,7 @@ export function replaceParams(
 
   if (params) {
     for (const key in params) {
-      const { optional, value } = params[key]
-
-      if (
-        values &&
-        values[key] !== undefined &&
-        key === "this"
-      ) {
-        newStr = values[value]
-        continue
-      }
+      const { optional } = params[key]
 
       if (
         values &&
