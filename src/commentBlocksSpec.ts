@@ -20,7 +20,10 @@ body1
     -->   
     body3
   body2.2
-  <!-- ref: mod3 -->
+  <!--
+    mod: mod3Ref
+    ref: mod3
+  -->
 body1.2
 <!-- mod: mod4
 key4: val -->
@@ -168,7 +171,9 @@ describe("commentIterator", (it) => {
         },
         hasMatch({ moduleName }) {
           return (
-            moduleName === "mod2" || moduleName === "mod3"
+            moduleName === "mod2" ||
+            moduleName === "mod3" ||
+            moduleName === "mod3Ref"
           )
         },
         process(str) {

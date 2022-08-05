@@ -42,11 +42,9 @@ export interface CommentBlockIndicesOptions {
   commentStart: string
   commentEnd: string
   modTrigger: string
-  refTrigger: string
 }
 
 export interface CommentBlockIndices {
-  trigger: "mod" | "ref"
   moduleName: string
   params: Record<string, CommentBlockIteratorParams>
   indent: number
@@ -76,7 +74,6 @@ export const defaultIndicesOptions: Required<CommentBlockIndicesOptions> =
     commentStart: "<!--",
     commentEnd: "-->",
     modTrigger: "mod:",
-    refTrigger: "ref:",
   }
 
 export function hasParent(
@@ -151,11 +148,10 @@ export function commentIterator(
     let refModule: CommentBlockIndices | undefined =
       undefined
 
-    if (module.trigger === "ref") {
+    if (module.params.ref) {
       refModule = og.indices.find(
-        ({ moduleName, trigger }) =>
-          module.moduleName === moduleName &&
-          trigger === "mod"
+        ({ moduleName }) =>
+          module.params.ref.value === moduleName
       )
 
       if (refModule) {
@@ -256,10 +252,9 @@ export function commentIndices(
   const commentStart = escapeRegex($.commentStart)
   const commentEnd = escapeRegex($.commentEnd)
   const modTrigger = escapeRegex($.modTrigger)
-  const refTrigger = escapeRegex($.refTrigger)
 
   const commentRegex = new RegExp(
-    `^(\\s*)${commentStart}\\s*(${modTrigger}|${refTrigger})(.*?)${commentEnd}\\s*\\n(\\s*)`,
+    `^(\\s*)${commentStart}\\s*${modTrigger}(.*?)${commentEnd}\\s*\\n(\\s*)`,
     "gms"
   )
 
@@ -269,22 +264,9 @@ export function commentIndices(
 
   while ((result = commentRegex.exec(str)) !== null) {
     const searchStr =
-      result[4] + str.slice(commentRegex.lastIndex)
+      result[3] + str.slice(commentRegex.lastIndex)
 
-    const isRef = result[2] === $.refTrigger
-
-    const endIndex = searchStr.search(
-      new RegExp(
-        `^(\\s{0,${
-          isRef ? "" : result[4].length - 1
-        }}[^\\s]|\\s{0,${
-          result[4].length
-        }}${commentStart}\\s*(${modTrigger}|${refTrigger}))`,
-        "gms"
-      )
-    )
-
-    const commentBody = result[3].trim()
+    const commentBody = result[2].trim()
     const match = commentBody.match(/([^\n]+)(.*)/s)
 
     if (match) {
@@ -305,10 +287,23 @@ export function commentIndices(
           return memo
         }, {} as Record<string, CommentBlockIteratorParams>)
 
+      const endIndex = searchStr.search(
+        new RegExp(
+          `^(\\s{0,${
+            params.ref ? "" : result[3].length - 1
+          }}[^\\s]|\\s{0,${
+            result[3].length
+          }}${commentStart}\\s*${modTrigger})`,
+          "gms"
+        )
+      )
+
       results.push({
         moduleName: match[1].trim(),
         params,
-        indent: isRef ? result[1].length : result[4].length,
+        indent: params.ref
+          ? result[1].length
+          : result[3].length,
         startCommentIndex:
           commentRegex.lastIndex -
           result[0].length +
@@ -317,8 +312,7 @@ export function commentIndices(
         endIndex:
           commentRegex.lastIndex +
           (endIndex === -1 ? searchStr.length : endIndex) -
-          result[4].length,
-        trigger: (isRef ? "ref" : "mod") as "ref" | "mod",
+          result[3].length,
       })
     }
   }
@@ -359,9 +353,9 @@ export function replaceParams(
       if (
         values &&
         values[key] !== undefined &&
-        value === "this"
+        key === "this"
       ) {
-        newStr = values[key]
+        newStr = values[value]
         continue
       }
 
