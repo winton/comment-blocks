@@ -16,6 +16,11 @@ body1
     mod: mod3Ref
     ref: mod3
   -->
+
+  <!--
+    mod: mod3Ref
+    ref: mod3
+  -->
 body1.2
 <!-- mod: mod4 -->
 body4
@@ -24,7 +29,7 @@ body4
 describe("commentIndices", (it) => {
   it("builds indices", () => {
     const indices = commentIndices(html)
-    // console.warn(JSON.stringify(indices))
+    console.warn(JSON.stringify(indices))
     expect(indices).toEqual([
       {
         moduleName: "mod1",
@@ -32,7 +37,7 @@ describe("commentIndices", (it) => {
         indent: 0,
         startCommentIndex: 1,
         startBodyIndex: 20,
-        endIndex: 163,
+        endIndex: 208,
       },
       {
         moduleName: "mod2",
@@ -52,19 +57,29 @@ describe("commentIndices", (it) => {
       },
       {
         moduleName: "mod3Ref",
-        params: { ref: { value: "mod3", optional: false } },
+        params: {},
+        refParam: "mod3",
         indent: 2,
         startCommentIndex: 113,
         startBodyIndex: 155,
         endIndex: 155,
       },
       {
+        moduleName: "mod3Ref",
+        params: {},
+        refParam: "mod3",
+        indent: 2,
+        startCommentIndex: 158,
+        startBodyIndex: 200,
+        endIndex: 200,
+      },
+      {
         moduleName: "mod4",
         params: {},
         indent: 0,
-        startCommentIndex: 163,
-        startBodyIndex: 182,
-        endIndex: 188,
+        startCommentIndex: 208,
+        startBodyIndex: 227,
+        endIndex: 233,
       },
     ])
   })

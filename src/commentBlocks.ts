@@ -270,7 +270,7 @@ export function commentIndices(
   const modTrigger = escapeRegex($.modTrigger)
 
   const commentRegex = new RegExp(
-    `^(\\s*)${commentStart}\\s*${modTrigger}(.*?)${commentEnd}\\s*\\n(\\s*)`,
+    `^([^\\S\\n]*)${commentStart}\\s*${modTrigger}(.*?)${commentEnd}[^\\S\\n]*\\n([^\\S\\n]*)`,
     "gms"
   )
 
